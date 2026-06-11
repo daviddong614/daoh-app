@@ -5385,7 +5385,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">倾诉内容</label>
-                    <textarea class="form-input" id="treehole-post-content" placeholder="在这里说出心里话..." style="min-height: 160px; background: rgba(26, 26, 31, 0.6);"></textarea>
+                    <textarea class="form-input" id="treehole-post-content" placeholder="在这里说出心里话..." style="min-height: 160px; background: rgba(26, 26, 31, 0.6); color: #e0d8d0;"></textarea>
                 </div>
                 <div class="form-group">
                     <div class="upload-area-compact" onclick="document.getElementById('treehole-post-file-input').click()" style="border-color: rgba(92, 64, 51, 0.5);">
@@ -5782,6 +5782,8 @@
 
             // 从 Supabase 加载帖子数据
             await loadPostsFromDB();
+            // 从 Supabase 加载树洞数据
+            await loadTreeholePostsFromDB();
         }
 
         // 页面加载完成后初始化
@@ -5899,6 +5901,32 @@
             
             if (error || !data) return [];
             return data;
+        }
+
+        // 加载树洞数据并替换硬编码
+        async function loadTreeholePostsFromDB() {
+            try {
+                const data = await loadTreeholeFromDB();
+                if (data && data.length > 0) {
+                    // 清空硬编码数据，替换为数据库数据
+                    treeholePosts.length = 0;
+                    data.forEach(post => {
+                        treeholePosts.push({
+                            id: post.id,
+                            author: post.anonymous_name || '夜行人#????',
+                            tag: post.tag || 'free',
+                            content: post.content,
+                            time: formatTimeAgo(post.created_at),
+                            warms: post.warms_count || 0,
+                            hugs: post.hugs_count || 0,
+                            comments: post.comments_count || 0
+                        });
+                    });
+                    renderTreeholeFull();
+                }
+            } catch (e) {
+                console.error('加载树洞数据失败:', e);
+            }
         }
 
         // 心情记录写入 Supabase
