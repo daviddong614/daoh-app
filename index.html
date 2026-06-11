@@ -7725,25 +7725,7 @@
         }
 
         // ========== 修改评论提交函数 ==========
-        const originalSubmitComment = submitComment;
-        submitComment = function(postId) {
-            const input = document.getElementById(`comment-input-${postId}`);
-            if (input && (input.value.trim() || (commentMediaFiles[postId] && commentMediaFiles[postId].length > 0))) {
-                const sensitiveWord = checkSensitiveWords(input.value);
-                if (sensitiveWord) {
-                    showToast('说点正经的');
-                    return;
-                }
-                // 清除评论图片
-                delete commentMediaFiles[postId];
-                const preview = document.getElementById(`comment-preview-${postId}`);
-                if (preview) preview.innerHTML = '';
-                input.value = '';
-                showToast('说出来了');
-            }
-        };
-
-        // ========== 修改关闭弹窗函数 ==========
+        // ========== 清理弹窗函数 ==========
         const originalClosePostModal = closePostModal;
         closePostModal = function() {
             document.getElementById('post-modal').classList.remove('active');
@@ -7752,14 +7734,6 @@
             document.getElementById('post-content').value = '';
             document.getElementById('upload-preview').innerHTML = '';
             currentPostMedia = [];
-        };
-
-        const originalCloseTreeholeModal = closeTreeholeModal;
-        closeTreeholeModal = function() {
-            document.getElementById('treehole-modal').classList.remove('active');
-            document.getElementById('treehole-content').value = '';
-            document.getElementById('treehole-upload-preview').innerHTML = '';
-            currentTreeholeMedia = [];
         };
 
         const originalCloseTreeholePostModal = closeTreeholePostModal;
