@@ -5771,12 +5771,13 @@
             const hasSession = await initUserData();
             
             if (hasSession) {
-                // 有已保存的会话，更新UI
+                // 有已保存的会话，隐藏登录页，恢复UI
+                document.getElementById('login-page').style.display = 'none';
                 updateLoggedInUI();
                 updateGuestUI();
                 console.log('已恢复会话:', userName);
             } else {
-                // 没有会话，保持游客模式
+                // 没有会话，保持游客模式（登录页默认显示）
                 updateGuestUI();
             }
 
@@ -6818,44 +6819,49 @@
                 return;
             }
             
-            // 写入 Supabase
-            const { data, error } = await sb.from('treehole_posts').insert([{
-                content: content
-            }]).select().single();
+            try {
+                // 写入 Supabase
+                const { data, error } = await sb.from('treehole_posts').insert([{
+                    content: content
+                }]).select().single();
 
-            if (error) {
-                console.error('树洞发帖失败:', error);
+                if (error) {
+                    console.error('树洞发帖失败:', error);
+                    showToast('发帖失败，请重试');
+                    return;
+                }
+
+                closeTreeholePostModal();
+                
+                const newPost = {
+                    id: data.id,
+                    author: currentAnonymousName,
+                    tag: currentTreeholeTag || 'free',
+                    content: content,
+                    time: '刚刚',
+                    warms: 0,
+                    hugs: 0,
+                    comments: 0
+                };
+                
+                // 检测未证实信息
+                if (content.includes('据说') || content.includes('听说') || content.includes('小道消息')) {
+                    newPost.unverified = true;
+                }
+                
+                // 检测健康/医疗/投资领域
+                if (content.includes('健康') || content.includes('医疗') || content.includes('投资') || content.includes('股票')) {
+                    newPost.disclaimer = true;
+                }
+                
+                treeholePosts.unshift(newPost);
+                userPostCount++;
+                renderTreeholeFull();
+                showToast('说出来就好 🌙');
+            } catch (e) {
+                console.error('树洞发帖异常:', e);
                 showToast('发帖失败，请重试');
-                return;
             }
-
-            closeTreeholePostModal();
-            
-            const newPost = {
-                id: data.id,
-                author: currentAnonymousName,
-                tag: currentTreeholeTag || 'free',
-                content: content,
-                time: '刚刚',
-                warms: 0,
-                hugs: 0,
-                comments: 0
-            };
-            
-            // 检测未证实信息
-            if (content.includes('据说') || content.includes('听说') || content.includes('小道消息')) {
-                newPost.unverified = true;
-            }
-            
-            // 检测健康/医疗/投资领域
-            if (content.includes('健康') || content.includes('医疗') || content.includes('投资') || content.includes('股票')) {
-                newPost.disclaimer = true;
-            }
-            
-            treeholePosts.unshift(newPost);
-            userPostCount++;
-            renderTreeholeFull();
-            showToast('说出来就好 🌙');
         }
 
         function handleFileUpload(input) {
@@ -6910,29 +6916,34 @@
                 return;
             }
 
-            // 写入 Supabase
-            const { data, error } = await sb.from('posts').insert([{
-                category: category,
-                title: title.trim(),
-                content: content.trim(),
-                author_nickname: userName,
-                author_avatar: userAvatar,
-                tag: ''
-            }]).select().single();
+            try {
+                // 写入 Supabase
+                const { data, error } = await sb.from('posts').insert([{
+                    category: category,
+                    title: title.trim(),
+                    content: content.trim(),
+                    author_nickname: userName,
+                    author_avatar: userAvatar,
+                    tag: ''
+                }]).select().single();
 
-            if (error) {
-                console.error('发帖失败:', error);
+                if (error) {
+                    console.error('发帖失败:', error);
+                    showToast('发帖失败，请重试');
+                    return;
+                }
+                
+                closePostModal();
+                showToast('说出来了');
+                userPostCount++;
+
+                // 刷新帖子列表
+                await loadPostsFromDB();
+                renderHotPosts();
+            } catch (e) {
+                console.error('发帖异常:', e);
                 showToast('发帖失败，请重试');
-                return;
             }
-            
-            closePostModal();
-            showToast('说出来了');
-            userPostCount++;
-
-            // 刷新帖子列表
-            await loadPostsFromDB();
-            renderHotPosts();
         }
 
         async function submitTreehole() {
@@ -6951,9 +6962,9 @@
             }
 
             // 写入 Supabase 树洞表
-            const { error } = await sb.from('treehole_posts').insert([{
+            const { data, error } = await sb.from('treehole_posts').insert([{
                 content: content.trim()
-            }]);
+            }]).select().single();
 
             if (error) {
                 console.error('树洞发帖失败:', error);
@@ -6962,6 +6973,10 @@
             }
             
             closeTreeholeModal();
+            document.getElementById('treehole-content').value = '';
+            
+            // 刷新树洞列表
+            await loadTreeholePostsFromDB();
             showToast('说出来就好');
         }
 
