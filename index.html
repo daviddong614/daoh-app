@@ -6982,28 +6982,37 @@
                     return;
                 }
                 
-                // 写入 Supabase
-                const { error } = await sb.from('comments').insert([{
-                    post_id: postId,
-                    content: input.value.trim(),
-                    author_nickname: userName,
-                    author_avatar: userAvatar
-                }]);
+                try {
+                    // 写入 Supabase
+                    const { error } = await sb.from('comments').insert([{
+                        post_id: postId,
+                        content: input.value.trim(),
+                        author_nickname: userName,
+                        author_avatar: userAvatar
+                    }]);
 
-                if (error) {
-                    console.error('评论失败:', error);
+                    if (error) {
+                        console.error('评论失败:', error);
+                        showToast('评论失败，请重试');
+                        return;
+                    }
+
+                    // 更新帖子评论计数：先查当前值再+1
+                    const { data: postData } = await sb.from('posts').select('comments_count').eq('id', postId).single();
+                    if (postData) {
+                        await sb.from('posts').update({ comments_count: (postData.comments_count || 0) + 1 }).eq('id', postId);
+                    }
+
+                    showToast('说出来了');
+                    input.value = '';
+
+                    // 刷新帖子详情，显示新评论
+                    const catId = getCategoryByPostId(postId);
+                    showPostDetail(postId, catId);
+                } catch (e) {
+                    console.error('评论异常:', e);
                     showToast('评论失败，请重试');
-                    return;
                 }
-
-                // 更新帖子评论计数
-                await sb.rpc('increment_comments_count', { post_id_input: postId }).catch(() => {
-                    // 如果 RPC 不存在，用原始更新
-                    sb.from('posts').update({ comments_count: sb.raw('comments_count + 1') }).eq('id', postId);
-                });
-
-                showToast('说出来了');
-                input.value = '';
             }
         }
 
@@ -7044,33 +7053,53 @@
                 return;
             }
 
-            const isLiked = el.classList.contains('liked');
-            const count = el.querySelector('span:last-child');
-            const current = parseInt(count.textContent);
+            try {
+                const isLiked = el.classList.contains('liked');
+                const count = el.querySelector('span:last-child');
+                const current = parseInt(count.textContent);
 
-            if (isLiked) {
-                // 取消点赞
-                await sb.from('likes').delete()
-                    .eq('user_nickname', userName)
-                    .eq('post_id', postId);
-                el.classList.remove('liked');
-                count.textContent = current - 1;
-                // 更新帖子计数
-                await sb.from('posts').update({ likes_count: Math.max(0, current - 1) }).eq('id', postId);
-            } else {
-                // 点赞
-                const { error } = await sb.from('likes').insert([{
-                    user_nickname: userName,
-                    post_id: postId
-                }]);
-                if (error && error.code === '23505') {
-                    // 已点赞过，忽略
-                    return;
+                if (isLiked) {
+                    // 取消点赞
+                    const { error } = await sb.from('likes').delete()
+                        .eq('user_nickname', userName)
+                        .eq('post_id', postId);
+                    if (error) {
+                        console.error('取消点赞失败:', error);
+                        return;
+                    }
+                    el.classList.remove('liked');
+                    count.textContent = current - 1;
+                    // 更新帖子计数
+                    const { data: pd } = await sb.from('posts').select('likes_count').eq('id', postId).single();
+                    if (pd) {
+                        await sb.from('posts').update({ likes_count: Math.max(0, (pd.likes_count || 0) - 1) }).eq('id', postId);
+                    }
+                } else {
+                    // 点赞
+                    const { error } = await sb.from('likes').insert([{
+                        user_nickname: userName,
+                        post_id: postId
+                    }]);
+                    if (error) {
+                        if (error.code === '23505') {
+                            // 已点赞过，忽略
+                            return;
+                        }
+                        console.error('点赞失败:', error);
+                        showToast('点赞失败，请重试');
+                        return;
+                    }
+                    el.classList.add('liked');
+                    count.textContent = current + 1;
+                    // 更新帖子计数
+                    const { data: pd } = await sb.from('posts').select('likes_count').eq('id', postId).single();
+                    if (pd) {
+                        await sb.from('posts').update({ likes_count: (pd.likes_count || 0) + 1 }).eq('id', postId);
+                    }
                 }
-                el.classList.add('liked');
-                count.textContent = current + 1;
-                // 更新帖子计数
-                await sb.from('posts').update({ likes_count: current + 1 }).eq('id', postId);
+            } catch (e) {
+                console.error('点赞异常:', e);
+                showToast('操作失败，请重试');
             }
         }
 
