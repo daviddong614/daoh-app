@@ -5385,7 +5385,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">倾诉内容</label>
-                    <textarea class="form-input" id="treehole-post-content" placeholder="在这里说出心里话..." style="min-height: 160px; background: rgba(26, 26, 31, 0.6); color: #e0d8d0;"></textarea>
+                    <textarea class="form-input" id="treehole-post-content" placeholder="在这里说出心里话..." style="min-height: 160px; background: rgba(26, 26, 31, 0.6); color: #e0d8d0 !important;"></textarea>
                 </div>
                 <div class="form-group">
                     <div class="upload-area-compact" onclick="document.getElementById('treehole-post-file-input').click()" style="border-color: rgba(92, 64, 51, 0.5);">
@@ -6621,16 +6621,31 @@
             if (post) showPostDetail(postId, catId);
         }
 
-        function showPostDetail(postId, catId) {
+        async function showPostDetail(postId, catId) {
             const catPosts = posts[catId] || [];
             const post = catPosts.find(p => p.id == postId);
             if (!post) return;
 
-            const comments = [
-                { author: '钓友老王', avatar: '🎣', text: '写得不错，收藏了。请问楼主用的是哪款鱼漂？', time: '2小时前' },
-                { author: '茶道新手', avatar: '🍵', text: '同问鱼漂，我也想入手一款', time: '3小时前' },
-                { author: '老渔夫', avatar: '🎣', text: '回复 @钓友老王：达亿瓦的，入门款够用了', time: '2小时前' }
-            ];
+            // 从 Supabase 加载评论
+            let comments = [];
+            try {
+                const { data, error } = await sb
+                    .from('comments')
+                    .select('*')
+                    .eq('post_id', postId)
+                    .order('created_at', { ascending: true });
+                if (!error && data) {
+                    comments = data.map(c => ({
+                        author: c.author_nickname || '匿名',
+                        avatar: c.author_avatar || '👤',
+                        text: c.content,
+                        time: formatTimeAgo(c.created_at),
+                        images: c.images || []
+                    }));
+                }
+            } catch(e) {
+                console.error('加载评论失败:', e);
+            }
 
             document.getElementById('post-detail').innerHTML = `
                 <div class="post-detail">
