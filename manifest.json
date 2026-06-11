@@ -1,0 +1,17 @@
+{
+  "name": "道合 - 中年男人的精神家园",
+  "short_name": "道合",
+  "description": "志同道合·以趣会友，中年男人的精神家园",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#3d5a80",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Crect fill='%233d5a80' width='192' height='192' rx='40'/%3E%3Ctext x='96' y='110' fill='white' font-size='80' text-anchor='middle' font-family='serif'%3E道%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
