@@ -6045,16 +6045,16 @@
 
         // 数据 - 板块名称改为有温度的名字
         const categories = [
-            { id: 'fishing', name: '静水', icon: '🎣', desc: '钓鱼不就是图那片水边安静吗', posts: 12580 },
-            { id: 'tea', name: '半盏', icon: '🍵', desc: '茶倒半盏，留半盏给自己', posts: 9860 },
-            { id: 'collecting', name: '琢磨', icon: '📿', desc: '盘串在琢磨，人也在琢磨', posts: 8540 },
-            { id: 'wine', name: '对饮', icon: '🍷', desc: '走，喝两杯', posts: 11200 },
-            { id: 'chess', name: '听牌', icon: '🀄', desc: '打牌最爽就是听牌那一下', posts: 7800 },
-            { id: 'health', name: '守本', icon: '🧘', desc: '中年养生，就是守住根本', posts: 15600 },
-            { id: 'photo', name: '捕光', icon: '📷', desc: '捕捉光影，定格时光', posts: 9200 },
-            { id: 'car', name: '驭风', icon: '🚗', desc: '追风的男人', posts: 22900 },
-            { id: 'history', name: '论道', icon: '📚', desc: '聊历史，就着酒，才有味道', posts: 6900 },
-            { id: 'fitness', name: '铁骨', icon: '🏃', desc: '人过中年，得有副铁骨', posts: 11800 }
+            { id: 'fishing', name: '钓鱼', icon: '🎣', desc: '水边一坐，烦恼全消', posts: 12580 },
+            { id: 'tea', name: '品茶', icon: '🍵', desc: '一杯茶，一段慢时光', posts: 9860 },
+            { id: 'collecting', name: '文玩盘串', icon: '📿', desc: '盘的是串，磨的是性子', posts: 8540 },
+            { id: 'wine', name: '酒文化', icon: '🍷', desc: '走，喝两杯', posts: 11200 },
+            { id: 'chess', name: '棋牌', icon: '🀄', desc: '打牌最爽就是听牌那一下', posts: 7800 },
+            { id: 'health', name: '养生', icon: '🧘', desc: '人过中年，守住根本', posts: 15600 },
+            { id: 'photo', name: '摄影', icon: '📷', desc: '捕捉光影，定格时光', posts: 9200 },
+            { id: 'car', name: '汽车自驾', icon: '🚗', desc: '追风的男人', posts: 22900 },
+            { id: 'history', name: '历史军事', icon: '📚', desc: '聊历史，就着酒，才有味道', posts: 6900 },
+            { id: 'fitness', name: '运动健身', icon: '🏃', desc: '人过中年，得有副铁骨', posts: 11800 }
         ];
 
         const hotTopics = [
@@ -7788,9 +7788,40 @@
             currentTreeholePostMedia = [];
         };
 
+        // 作品展示墙数据
+        const worksData = {
+            1: { emoji: '🍖', title: '周末做的红烧肉', author: '老陈', likes: 238, desc: '小火慢炖3小时，入口即化。周末给家人做的，大家都说好吃。', time: '2天前' },
+            2: { emoji: '🌵', title: '阳台上的多肉', author: '老王', likes: 186, desc: '养了三年的多肉，现在爆盆了。多肉真的很好养，不用怎么管。', time: '1天前' },
+            3: { emoji: '🍶', title: '自家酿的米酒', author: '老李', likes: 312, desc: '自己酿的米酒，甜而不腻。冬天喝一杯，浑身暖和。', time: '3天前' },
+            4: { emoji: '🌹', title: '院子里的月季', author: '老张', likes: 275, desc: '院子里的月季开了，红的、粉的、黄的，真漂亮。', time: '5小时前' },
+            5: { emoji: '🍜', title: '手工拉面的诱惑', author: '老赵', likes: 198, desc: '自己学做手工拉面，虽然卖相一般，但味道不错。', time: '12小时前' },
+            6: { emoji: '🪵', title: '盘了三年的核桃', author: '老孙', likes: 420, desc: '从新核桃盘到现在，包浆越来越漂亮了。', time: '1天前' }
+        };
+
         // 作品展示墙点击处理
         showWorkDetail = function(id) {
-            showToast('作品详情功能开发中...');
+            const work = worksData[id];
+            if (!work) return;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+            modal.onclick = function(e) { if(e.target === modal) document.body.removeChild(modal); };
+            
+            modal.innerHTML = `
+                <div style="background:#1a1a1f;border-radius:16px;padding:24px;max-width:320px;width:90%;position:relative;">
+                    <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#999;font-size:24px;cursor:pointer;">×</button>
+                    <div style="width:100%;height:200px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:16px;background:linear-gradient(135deg,#2a2a30,#3a3a40);">${work.emoji}</div>
+                    <h3 style="color:#fff;font-size:20px;margin:0 0 8px 0;">${work.title}</h3>
+                    <p style="color:#8b7355;font-size:14px;margin:0 0 12px 0;">${work.author} · ${work.time}</p>
+                    <p style="color:#ccc;font-size:14px;line-height:1.6;margin:0 0 16px 0;">${work.desc}</p>
+                    <div style="display:flex;gap:16px;">
+                        <div style="flex:1;text-align:center;padding:10px;background:#2a2a30;border-radius:8px;color:#8b7355;">👍 ${work.likes}</div>
+                        <div style="flex:1;text-align:center;padding:10px;background:#2a2a30;border-radius:8px;color:#8b7355;">💬 ${Math.floor(work.likes * 0.3)}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         };
     </script>
 
