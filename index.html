@@ -1278,6 +1278,83 @@
             background: rgba(231, 76, 60, 0.1);
         }
 
+        /* 树洞评论区域 */
+        .treehole-comment-section {
+            background: rgba(255,255,255,0.03);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 16px;
+            margin: 0 -16px -12px -16px;
+            border-radius: 0 0 12px 12px;
+        }
+        .treehole-comment-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .treehole-comment-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .treehole-comment-item:last-child { border-bottom: none; }
+        .treehole-comment-avatar { font-size: 18px; flex-shrink: 0; }
+        .treehole-comment-body { flex: 1; min-width: 0; }
+        .treehole-comment-author {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 2px;
+        }
+        .treehole-comment-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .treehole-comment-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 2px;
+        }
+        .treehole-comment-input-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .treehole-comment-input {
+            flex: 1;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 8px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+        .treehole-comment-input:focus {
+            border-color: rgba(100,180,255,0.4);
+        }
+        .treehole-comment-input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        .treehole-comment-submit {
+            background: linear-gradient(135deg, #5b7fc7, #4a6ba5);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .treehole-comment-submit:active { opacity: 0.8; }
+        .treehole-no-comments {
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            padding: 12px 0;
+        }
         /* 树洞发布弹窗 */
         .treehole-post-modal .modal {
             background: linear-gradient(145deg, #1a1620 0%, #0d0b0f 100%);
@@ -5923,6 +6000,14 @@
                             comments: post.comments_count || 0
                         });
                     });
+                    // 同步 localStorage 中的评论数
+                    const allComments = JSON.parse(localStorage.getItem('treeholeComments') || '{}');
+                    treeholePosts.forEach(p => {
+                        const postId = String(p.id);
+                        if (allComments[postId]) {
+                            p.comments = allComments[postId].length;
+                        }
+                    });
                     renderTreeholeFull();
                 }
             } catch (e) {
@@ -6416,7 +6501,7 @@
                     })() : ''}
                     <div class="post-footer">
                         <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
-                        <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments}</div>
+                        <div class="post-action" onclick="toggleTreeholeComments('${post.id}')" style="cursor:pointer"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
                         <div class="post-action"><span class="post-action-icon">👁️</span> ${Math.floor(post.likes * 10)}</div>
                     </div>
                 </div>
@@ -6481,27 +6566,28 @@
                     ${post.disclaimer ? '<div class="disclaimer-badge">⚠️ 以上内容仅为个人观点，不构成专业建议</div>' : ''}
                     <p class="treehole-content">${post.content}</p>
                     <div class="treehole-footer">
-                        <button class="treehole-warm-btn ${isWarmed(post.id) ? 'active' : ''}" onclick="toggleWarm(this, ${post.id})">
+                        <button class="treehole-warm-btn ${isWarmed(post.id) ? 'active' : ''}" onclick="toggleWarm(this, '${post.id}')">
                             <span>🔥</span> <span>${post.warms}</span>
                         </button>
-                        <button class="treehole-hug-btn ${isHugged(post.id) ? 'active' : ''}" onclick="toggleHug(this, ${post.id})">
+                        <button class="treehole-hug-btn ${isHugged(post.id) ? 'active' : ''}" onclick="toggleHug(this, '${post.id}')">
                             <span>🤗</span> <span>${post.hugs}</span>
                         </button>
-                        <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments}</div>
-                        <button class="report-btn" onclick="openReportModal('post', ${post.id})">不妥</button>
+                        <div class="post-action" onclick="toggleTreeholeComments('${post.id}')" style="cursor:pointer"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
+                        <button class="report-btn" onclick="openReportModal('treehole', '${post.id}')">不妥</button>
                     </div>
                 </div>
             `).join('');
         }
 
         // 暖一下/抱抱状态
-        let warmedPosts = new Set();
-        let huggedPosts = new Set();
+        let warmedPosts = new Set(JSON.parse(localStorage.getItem('warmedPosts') || '[]'));
+        let huggedPosts = new Set(JSON.parse(localStorage.getItem('huggedPosts') || '[]'));
 
         function isWarmed(id) { return warmedPosts.has(id); }
         function isHugged(id) { return huggedPosts.has(id); }
 
         function toggleWarm(btn, id) {
+            if (!isLoggedIn) { alert('登录后才能暖一下'); return; }
             btn.classList.toggle('active');
             const count = btn.querySelector('span:last-child');
             const post = treeholePosts.find(p => p.id === id);
@@ -6515,9 +6601,11 @@
                 }
                 count.textContent = post.warms;
             }
+            localStorage.setItem('warmedPosts', JSON.stringify([...warmedPosts]));
         }
 
         function toggleHug(btn, id) {
+            if (!isLoggedIn) { alert('登录后才能抱抱'); return; }
             btn.classList.toggle('active');
             const count = btn.querySelector('span:last-child');
             const post = treeholePosts.find(p => p.id === id);
@@ -6531,9 +6619,124 @@
                 }
                 count.textContent = post.hugs;
             }
+            localStorage.setItem('huggedPosts', JSON.stringify([...huggedPosts]));
         }
 
-        // 分类标签筛选
+        // ========== 树洞评论功能 ==========
+        // 从 localStorage 加载树洞评论
+        function getTreeholeComments(postId) {
+            const all = JSON.parse(localStorage.getItem('treeholeComments') || '{}');
+            return all[postId] || [];
+        }
+
+        function saveTreeholeComments(postId, comments) {
+            const all = JSON.parse(localStorage.getItem('treeholeComments') || '{}');
+            all[postId] = comments;
+            localStorage.setItem('treeholeComments', JSON.stringify(all));
+        }
+
+        function toggleTreeholeComments(postId) {
+            // 找到对应的 treehole-card
+            const card = document.querySelector(`.treehole-card[data-id="${postId}"]`);
+            if (!card) return;
+
+            // 检查是否已经展开了评论区
+            let section = card.querySelector('.treehole-comment-section');
+            if (section) {
+                section.remove();
+                return;
+            }
+
+            // 创建评论区
+            section = document.createElement('div');
+            section.className = 'treehole-comment-section';
+
+            const comments = getTreeholeComments(postId);
+            
+            let commentListHtml = '';
+            if (comments.length === 0) {
+                commentListHtml = '<div class="treehole-no-comments">暂无评论，来说两句吧</div>';
+            } else {
+                commentListHtml = '<div class="treehole-comment-list">';
+                comments.forEach(c => {
+                    commentListHtml += `
+                        <div class="treehole-comment-item">
+                            <span class="treehole-comment-avatar">${c.avatar || '👨'}</span>
+                            <div class="treehole-comment-body">
+                                <div class="treehole-comment-author">${c.author}</div>
+                                <div class="treehole-comment-text">${c.content}</div>
+                                <div class="treehole-comment-time">${c.time}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                commentListHtml += '</div>';
+            }
+
+            section.innerHTML = `
+                ${commentListHtml}
+                <div class="treehole-comment-input-wrap">
+                    <input type="text" class="treehole-comment-input" placeholder="说点什么..." id="th-input-${postId}" maxlength="200" onkeydown="if(event.key==='Enter')submitTreeholeComment('${postId}')">
+                    <button class="treehole-comment-submit" onclick="submitTreeholeComment('${postId}')">发送</button>
+                </div>
+            `;
+
+            card.appendChild(section);
+            
+            // 聚焦输入框
+            setTimeout(() => {
+                const input = document.getElementById(`th-input-${postId}`);
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function submitTreeholeComment(postId) {
+            if (!isLoggedIn) { alert('登录后才能评论'); return; }
+            
+            const input = document.getElementById(`th-input-${postId}`);
+            if (!input) return;
+            
+            const text = input.value.trim();
+            if (!text) return;
+
+            // 敏感词过滤
+            const hasSensitive = sensitiveWords.some(w => text.includes(w));
+            if (hasSensitive) { alert('评论包含不当内容，请修改后重试'); return; }
+
+            const comment = {
+                author: userName,
+                avatar: userAvatar || '👨',
+                content: text,
+                time: '刚刚'
+            };
+
+            // 保存到 localStorage
+            const comments = getTreeholeComments(postId);
+            comments.push(comment);
+            saveTreeholeComments(postId, comments);
+
+            // 更新本地帖子评论计数
+            const post = treeholePosts.find(p => p.id === postId);
+            if (post) {
+                post.comments = comments.length;
+            }
+
+            // 更新显示上的评论数
+            const card = document.querySelector(`.treehole-card[data-id="${postId}"]`);
+            if (card) {
+                const countSpan = card.querySelector('.th-comment-count');
+                if (countSpan && post) {
+                    countSpan.textContent = post.comments;
+                }
+            }
+
+            // 重新渲染评论区
+            const section = card ? card.querySelector('.treehole-comment-section') : null;
+            if (section) section.remove();
+            toggleTreeholeComments(postId);
+        }
+
+                // 分类标签筛选
         function filterTreeholeTag(btn, tag) {
             document.querySelectorAll('.treehole-tag-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -6599,7 +6802,7 @@
                             })() : ''}
                             <div class="post-footer">
                                 <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
-                                <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments}</div>
+                                <div class="post-action" onclick="toggleTreeholeComments('${post.id}')" style="cursor:pointer"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
                             </div>
                         </div>
                     `).join('') : '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">这里还安静，你来写第一笔</div></div>'}
