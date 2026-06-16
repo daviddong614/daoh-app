@@ -6237,11 +6237,11 @@
         ];
 
         const hotTopics = [
-            { title: '各位老哥，你们钓过最大的鱼是多少斤？', views: '23.5万', comments: 1842 },
-            { title: '推荐一款适合中年人的口粮茶', views: '18.2万', comments: 956 },
-            { title: '刚提了辆坦克500，来说说用车感受', views: '15.8万', comments: 2103 },
-            { title: '每天晨跑5公里，坚持一年了', views: '12.4万', comments: 1567 },
-            { title: '入手了一串小叶紫檀，请各位掌眼', views: '9.7万', comments: 823 }
+            { title: '各位老哥，你们钓过最大的鱼是多少斤？', views: '23.5万', comments: 1842, category: 'fishing', categoryLabel: '钓鱼' },
+            { title: '推荐一款适合中年人的口粮茶', views: '18.2万', comments: 956, category: 'tea', categoryLabel: '品茶' },
+            { title: '刚提了辆坦克500，来说说用车感受', views: '15.8万', comments: 2103, category: 'car', categoryLabel: '汽车自驾' },
+            { title: '每天晨跑5公里，坚持一年了', views: '12.4万', comments: 1567, category: 'fitness', categoryLabel: '运动健身' },
+            { title: '入手了一串小叶紫檀，请各位掌眼', views: '9.7万', comments: 823, category: 'collecting', categoryLabel: '文玩盘串' }
         ];
 
         const treeholePosts = [
@@ -6605,7 +6605,7 @@
         function renderHotTopics() {
             const container = document.getElementById('hot-topics');
             container.innerHTML = hotTopics.map((topic, i) => `
-                <div class="hot-topic">
+                <div class="hot-topic" onclick="openHotTopic(${i})" style="cursor:pointer;">
                     <div class="hot-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
                     <div class="hot-content">
                         <div class="hot-title">${topic.title}</div>
@@ -6613,6 +6613,41 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function openHotTopic(index) {
+            const topic = hotTopics[index];
+            if (!topic) return;
+            
+            // If there's a matching category, navigate to it
+            if (topic.category) {
+                showCategory(topic.category);
+                // Show a toast about the topic
+                showToast('进入' + (topic.categoryLabel || '') + '板块');
+            } else {
+                // Show topic in a modal
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+                modal.onclick = function(e) { if(e.target === modal) document.body.removeChild(modal); };
+                
+                modal.innerHTML = `
+                    <div style="background:#1a1a1f;border-radius:16px;padding:24px;max-width:400px;width:90%;position:relative;">
+                        <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#999;font-size:24px;cursor:pointer;">×</button>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                            <span style="background:#e74c3c;color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;">热</span>
+                            <span style="color:#888;font-size:13px;">${topic.views} 阅读</span>
+                        </div>
+                        <h3 style="color:#fff;font-size:18px;margin:0 0 16px 0;line-height:1.4;">${topic.title}</h3>
+                        <div style="background:#2a2a30;border-radius:8px;padding:16px;margin-bottom:16px;">
+                            <div style="color:#888;font-size:13px;margin-bottom:8px;">💬 ${topic.comments} 条讨论</div>
+                            <div style="color:#ccc;font-size:14px;line-height:1.6;">这个话题正在热烈讨论中，快来分享你的看法吧！</div>
+                        </div>
+                        <button onclick="document.body.removeChild(this.parentElement.parentElement); openPostModal();" style="width:100%;padding:12px;background:linear-gradient(135deg,#5b7fc7,#4a6ba5);color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">参与讨论</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            }
         }
 
         function renderActiveUsers() {
