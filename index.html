@@ -4622,7 +4622,101 @@
                 font-size: 20px;
             }
         }
-    </style>
+    
+        /* 移动端侧滑菜单 */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .mobile-menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a1f;
+            z-index: 9999;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+        }
+        .mobile-menu.active {
+            left: 0;
+        }
+        .mobile-menu-header {
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #2a2a30, #3a3a40);
+            border-bottom: 1px solid #3a3a40;
+        }
+        .mobile-menu-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mobile-menu-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #4a4a50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .mobile-menu-name {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .mobile-menu-desc {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .mobile-menu-items {
+            padding: 16px 0;
+        }
+        .mobile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            color: #ccc;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .mobile-menu-item:hover,
+        .mobile-menu-item:active {
+            background: rgba(255,255,255,0.05);
+        }
+        .mobile-menu-item-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        .mobile-menu-divider {
+            height: 1px;
+            background: #2a2a30;
+            margin: 8px 20px;
+        }
+</style>
 </head>
 <body>
     <!-- 登录页 -->
@@ -7329,7 +7423,42 @@
         }
 
         function toggleMobileMenu() {
-            showToast('菜单功能开发中');
+            const menu = document.getElementById('mobile-menu');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            if (menu && overlay) {
+                const isOpen = menu.classList.contains('active');
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    menu.classList.add('active');
+                    overlay.classList.add('active');
+                    updateMobileMenuUserInfo();
+                }
+            }
+        }
+        
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            if (menu && overlay) {
+                menu.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+        
+        function updateMobileMenuUserInfo() {
+            const avatarEl = document.getElementById('mobile-menu-avatar');
+            const nameEl = document.getElementById('mobile-menu-name');
+            const descEl = document.getElementById('mobile-menu-desc');
+            if (isLoggedIn) {
+                if (avatarEl) avatarEl.textContent = userAvatar || '👨';
+                if (nameEl) nameEl.textContent = userName || '道合用户';
+                if (descEl) descEl.textContent = '志同道合，一路同行';
+            } else {
+                if (avatarEl) avatarEl.textContent = '👤';
+                if (nameEl) nameEl.textContent = '游客';
+                if (descEl) descEl.textContent = '点击登录/注册';
+            }
         }
 
         // 初始化
@@ -8175,6 +8304,56 @@
             <img class="lightbox-image" id="lightbox-image" src="" alt="">
             <button class="lightbox-nav lightbox-next" onclick="lightboxNext()">›</button>
             <div class="lightbox-counter" id="lightbox-counter"></div>
+        </div>
+    </div>
+
+    <!-- 移动端侧滑菜单 -->
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-header">
+            <div class="mobile-menu-user">
+                <div class="mobile-menu-avatar" id="mobile-menu-avatar">👤</div>
+                <div>
+                    <div class="mobile-menu-name" id="mobile-menu-name">游客</div>
+                    <div class="mobile-menu-desc" id="mobile-menu-desc">志同道合，一路同行</div>
+                </div>
+            </div>
+        </div>
+        <div class="mobile-menu-items">
+            <button class="mobile-menu-item" onclick="showPage('home'); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">🏠</span>
+                <span>首页</span>
+            </button>
+            <button class="mobile-menu-item" onclick="showPage('treehole'); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">🌙</span>
+                <span>深夜树洞</span>
+            </button>
+            <button class="mobile-menu-item" onclick="showPage('profile'); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">👤</span>
+                <span>我的角落</span>
+            </button>
+            <div class="mobile-menu-divider"></div>
+            <button class="mobile-menu-item" onclick="openPostModal(); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">✍️</span>
+                <span>说两句</span>
+            </button>
+            <button class="mobile-menu-item" onclick="showPage('categories'); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">📋</span>
+                <span>同道板块</span>
+            </button>
+            <div class="mobile-menu-divider"></div>
+            <button class="mobile-menu-item" onclick="handleVerifyClick(); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">🔒</span>
+                <span>身份认证</span>
+            </button>
+            <button class="mobile-menu-item" onclick="showToast('设置功能开发中'); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">⚙️</span>
+                <span>设置</span>
+            </button>
+            <button class="mobile-menu-item" onclick="showToast('帮助与反馈开发中'); closeMobileMenu();">
+                <span class="mobile-menu-item-icon">💡</span>
+                <span>帮助与反馈</span>
+            </button>
         </div>
     </div>
 </body>
