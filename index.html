@@ -8006,26 +8006,165 @@
             const work = worksData[id];
             if (!work) return;
             
+            // Get work comments from localStorage
+            const getWorkComments = (workId) => {
+                const all = JSON.parse(localStorage.getItem('workComments') || '{}');
+                return all[workId] || [];
+            };
+            const saveWorkComments = (workId, comments) => {
+                const all = JSON.parse(localStorage.getItem('workComments') || '{}');
+                all[workId] = comments;
+                localStorage.setItem('workComments', JSON.stringify(all));
+            };
+            
+            // Get like state
+            const getWorkLikes = () => JSON.parse(localStorage.getItem('workLikes') || '{}');
+            const isWorkLiked = (workId) => {
+                const likes = getWorkLikes();
+                return likes[workId] === true;
+            };
+            const getWorkLikeCount = (workId) => {
+                const base = work.likes || 0;
+                const extra = JSON.parse(localStorage.getItem('workLikeExtras') || '{}');
+                return base + (extra[workId] || 0);
+            };
+            
             const modal = document.createElement('div');
             modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
             modal.onclick = function(e) { if(e.target === modal) document.body.removeChild(modal); };
             
+            const comments = getWorkComments(id);
+            const liked = isWorkLiked(id);
+            const likeCount = getWorkLikeCount(id);
+            const commentCount = comments.length + Math.floor((work.likes || 0) * 0.3);
+            
             modal.innerHTML = `
-                <div style="background:#1a1a1f;border-radius:16px;padding:24px;max-width:320px;width:90%;position:relative;">
-                    <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#999;font-size:24px;cursor:pointer;">×</button>
+                <div style="background:#1a1a1f;border-radius:16px;padding:24px;max-width:360px;width:90%;position:relative;max-height:85vh;overflow-y:auto;">
+                    <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#999;font-size:24px;cursor:pointer;z-index:1;">×</button>
                     <div style="width:100%;height:200px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:16px;background:linear-gradient(135deg,#2a2a30,#3a3a40);">${work.emoji}</div>
                     <h3 style="color:#fff;font-size:20px;margin:0 0 8px 0;">${work.title}</h3>
                     <p style="color:#8b7355;font-size:14px;margin:0 0 12px 0;">${work.author} · ${work.time}</p>
                     <p style="color:#ccc;font-size:14px;line-height:1.6;margin:0 0 16px 0;">${work.desc}</p>
-                    <div style="display:flex;gap:16px;">
-                        <div style="flex:1;text-align:center;padding:10px;background:#2a2a30;border-radius:8px;color:#8b7355;">👍 ${work.likes}</div>
-                        <div style="flex:1;text-align:center;padding:10px;background:#2a2a30;border-radius:8px;color:#8b7355;">💬 ${Math.floor(work.likes * 0.3)}</div>
+                    
+                    <div style="display:flex;gap:12px;margin-bottom:16px;">
+                        <button id="work-like-btn-${id}" onclick="toggleWorkLike(${id})" style="flex:1;text-align:center;padding:12px;background:${liked ? '#3a2a20' : '#2a2a30'};border:1px solid ${liked ? '#8b5a30' : '#3a3a40'};border-radius:10px;color:${liked ? '#e8a040' : '#8b7355'};font-size:15px;cursor:pointer;transition:all 0.2s;">
+                            👍 <span id="work-like-count-${id}">${likeCount}</span>
+                        </button>
+                        <div style="flex:1;text-align:center;padding:12px;background:#2a2a30;border-radius:10px;color:#8b7355;font-size:15px;">
+                            💬 <span id="work-comment-count-${id}">${commentCount}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top:1px solid #2a2a30;padding-top:12px;">
+                        <div style="color:#666;font-size:13px;margin-bottom:8px;">评论</div>
+                        <div id="work-comment-list-${id}" style="max-height:150px;overflow-y:auto;margin-bottom:10px;">
+                            ${comments.length === 0 ? '<div style="text-align:center;color:#555;font-size:12px;padding:8px 0;">暂无评论，来说两句吧</div>' : 
+                            comments.map(c => `
+                                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #2a2a30;">
+                                    <span style="font-size:16px;">${c.avatar || '👨'}</span>
+                                    <div style="flex:1;">
+                                        <div style="font-size:12px;color:#8b7355;">${c.author}</div>
+                                        <div style="font-size:13px;color:#ccc;line-height:1.4;">${c.content}</div>
+                                        <div style="font-size:11px;color:#555;margin-top:2px;">${c.time}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="work-comment-input-${id}" placeholder="说点什么..." maxlength="200" style="flex:1;background:#2a2a30;border:1px solid #3a3a40;border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')submitWorkComment(${id})">
+                            <button onclick="submitWorkComment(${id})" style="background:linear-gradient(135deg,#5b7fc7,#4a6ba5);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;cursor:pointer;white-space:nowrap;">发送</button>
+                        </div>
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
+            
+            // Store helpers on modal for access by other functions
+            modal._workId = id;
+            modal._getWorkComments = getWorkComments;
+            modal._saveWorkComments = saveWorkComments;
+            modal._work = work;
+            
+            setTimeout(() => {
+                const input = document.getElementById('work-comment-input-' + id);
+                if (input) input.focus();
+            }, 200);
         };
+        
+        function toggleWorkLike(id) {
+            if (!isLoggedIn) { alert('登录后才能点赞'); return; }
+            const likes = JSON.parse(localStorage.getItem('workLikes') || '{}');
+            const extras = JSON.parse(localStorage.getItem('workLikeExtras') || '{}');
+            const btn = document.getElementById('work-like-btn-' + id);
+            const countEl = document.getElementById('work-like-count-' + id);
+            if (!btn || !countEl) return;
+            
+            if (likes[id]) {
+                delete likes[id];
+                extras[id] = (extras[id] || 1) - 1;
+                btn.style.background = '#2a2a30';
+                btn.style.borderColor = '#3a3a40';
+                btn.style.color = '#8b7355';
+            } else {
+                likes[id] = true;
+                extras[id] = (extras[id] || 0) + 1;
+                btn.style.background = '#3a2a20';
+                btn.style.borderColor = '#8b5a30';
+                btn.style.color = '#e8a040';
+            }
+            localStorage.setItem('workLikes', JSON.stringify(likes));
+            localStorage.setItem('workLikeExtras', JSON.stringify(extras));
+            
+            // Find base likes from worksData
+            const work = worksData[id];
+            const base = work ? (work.likes || 0) : 0;
+            countEl.textContent = base + (extras[id] || 0);
+        }
+        
+        function submitWorkComment(id) {
+            if (!isLoggedIn) { alert('登录后才能评论'); return; }
+            const input = document.getElementById('work-comment-input-' + id);
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const all = JSON.parse(localStorage.getItem('workComments') || '{}');
+            if (!all[id]) all[id] = [];
+            all[id].push({
+                author: userName,
+                avatar: userAvatar || '👨',
+                content: text,
+                time: '刚刚'
+            });
+            localStorage.setItem('workComments', JSON.stringify(all));
+            
+            input.value = '';
+            
+            // Re-render the modal
+            document.querySelectorAll('[id^="work-comment-list-"]').forEach(el => {
+                const workId = el.id.replace('work-comment-list-', '');
+                if (parseInt(workId) === id) {
+                    el.innerHTML = all[id].map(c => `
+                        <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #2a2a30;">
+                            <span style="font-size:16px;">${c.avatar || '👨'}</span>
+                            <div style="flex:1;">
+                                <div style="font-size:12px;color:#8b7355;">${c.author}</div>
+                                <div style="font-size:13px;color:#ccc;line-height:1.4;">${c.content}</div>
+                                <div style="font-size:11px;color:#555;margin-top:2px;">${c.time}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    el.scrollTop = el.scrollHeight;
+                }
+            });
+            
+            // Update comment count
+            const work = worksData[id];
+            const baseComments = work ? Math.floor((work.likes || 0) * 0.3) : 0;
+            const countEl = document.getElementById('work-comment-count-' + id);
+            if (countEl) countEl.textContent = baseComments + all[id].length;
+        }
     </script>
 
     <!-- Lightbox 全屏查看 -->
