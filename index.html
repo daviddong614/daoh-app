@@ -3836,6 +3836,68 @@
             margin-top: 8px;
         }
 
+        /* 今日话题 - 看法展示 */
+        .today-topic-answers {
+            margin-top: 16px;
+        }
+
+        .topic-answer-title {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .topic-answer-item {
+            background: #f8f8f9;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .topic-answer-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .topic-answer-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .topic-answer-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+
+        .topic-answer-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .topic-answer-time {
+            font-size: 11px;
+            color: #999;
+            margin-left: auto;
+        }
+
+        .topic-answer-text {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
         /* 男人树洞入口卡片 - 深灰色背景 + 横向布局 */
         .man-treehole-card {
             background: linear-gradient(145deg, #2a2a2e 0%, #1f1f22 100%);
@@ -5030,6 +5092,7 @@
                         <button class="today-topic-submit" onclick="submitTopicAnswer()">分享看法</button>
                     </div>
                     <div class="today-topic-char-count"><span id="topic-char-count">0</span>/200</div>
+                    <div class="today-topic-answers" id="today-topic-answers"></div>
                 </div>
 
                 <!-- 男人树洞入口卡片 -->
@@ -7597,6 +7660,8 @@
             
             if (todayTopicEl) todayTopicEl.textContent = todayTopics[topicIndex];
             if (topicDateEl) topicDateEl.textContent = `${today.getMonth() + 1}月${today.getDate()}日`;
+            // 渲染已有的回答
+            renderTopicAnswers();
         }
 
         // 初始化话题字数统计
@@ -7632,6 +7697,40 @@
         }
 
         // 提交话题回答
+        // 获取今日话题当天的key
+        function getTopicKey() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+            return `topicAnswers_${today.getFullYear()}_${dayOfYear}`;
+        }
+
+        // 渲染今日话题的回答
+        function renderTopicAnswers() {
+            const container = document.getElementById('today-topic-answers');
+            if (!container) return;
+            const key = getTopicKey();
+            const answers = JSON.parse(localStorage.getItem(key) || '[]');
+            if (answers.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            let html = `<div class="topic-answer-title">💬 ${answers.length}个兄弟的看法</div>`;
+            answers.forEach(a => {
+                const initial = (a.author || '匿')[0];
+                html += `
+                    <div class="topic-answer-item">
+                        <div class="topic-answer-author">
+                            <div class="topic-answer-avatar">${initial}</div>
+                            <span class="topic-answer-name">${a.author || '匿名兄弟'}</span>
+                            <span class="topic-answer-time">${a.time || ''}</span>
+                        </div>
+                        <div class="topic-answer-text">${a.text}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
         function submitTopicAnswer() {
             const answer = document.getElementById('topic-answer').value.trim();
             
@@ -7647,9 +7746,24 @@
                 return;
             }
             
+            // 保存到localStorage
+            const key = getTopicKey();
+            const answers = JSON.parse(localStorage.getItem(key) || '[]');
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            answers.unshift({
+                author: isLoggedIn && !isGuest ? (userName || '匿名兄弟') : '匿名兄弟',
+                text: answer,
+                time: timeStr
+            });
+            localStorage.setItem(key, JSON.stringify(answers));
+            
             // 清除输入
             document.getElementById('topic-answer').value = '';
             document.getElementById('topic-char-count').textContent = '0';
+            
+            // 重新渲染回答列表
+            renderTopicAnswers();
             
             showToast('说出来了，兄弟们都看到了 👍');
         }
