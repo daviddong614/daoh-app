@@ -6094,6 +6094,8 @@
                             time: formatTimeAgo(post.created_at),
                             warms: post.warms_count || 0,
                             hugs: post.hugs_count || 0,
+                            baseWarms: post.warms_count || 0,
+                            baseHugs: post.hugs_count || 0,
                             comments: post.comments_count || 0
                         });
                     });
@@ -6103,6 +6105,13 @@
                         const postId = String(p.id);
                         if (allComments[postId]) {
                             p.comments = allComments[postId].length;
+                        }
+                        // 同步点赞/抱抱状态到显示值
+                        if (warmedPosts.has(postId) || warmedPosts.has(p.id)) {
+                            p.warms = p.baseWarms + 1;
+                        }
+                        if (huggedPosts.has(postId) || huggedPosts.has(p.id)) {
+                            p.hugs = p.baseHugs + 1;
                         }
                     });
                     renderTreeholeFull();
@@ -6257,6 +6266,13 @@
             { id: 7, author: '听风者#3356', tag: 'work', content: '听说公司要搬迁到外地去，如果是真的就只能被迫换工作了。在这个年纪重新开始，想想就头大。各位老哥有没有类似的经历？', time: '1天前', warms: 234, hugs: 45, comments: 89, unverified: true },
             { id: 8, author: '静默者#9981', tag: 'health', content: '最近体检报告出来了，好几项指标都不太好。医生让注意休息，可是人到中年，哪有资格休息啊。老婆孩子还指着我呢。', time: '2天前', warms: 567, hugs: 123, comments: 134, disclaimer: true }
         ];
+
+        // 为每条帖子保存原始计数（用于localStorage状态+原始数计算显示值）
+        treeholePosts.forEach(p => { p.baseWarms = p.warms; p.baseHugs = p.hugs; });
+
+        // 暖一下/抱抱状态（提前定义，确保数据加载时可引用）
+        let warmedPosts = new Set(JSON.parse(localStorage.getItem('warmedPosts') || '[]'));
+        let huggedPosts = new Set(JSON.parse(localStorage.getItem('huggedPosts') || '[]'));
 
         const treeholeTagNames = {
             work: '💼 工作压力',
@@ -6711,47 +6727,37 @@
             `).join('');
         }
 
-        // 暖一下/抱抱状态
-        let warmedPosts = new Set(JSON.parse(localStorage.getItem('warmedPosts') || '[]'));
-        let huggedPosts = new Set(JSON.parse(localStorage.getItem('huggedPosts') || '[]'));
-
         function isWarmed(id) { return warmedPosts.has(id); }
         function isHugged(id) { return huggedPosts.has(id); }
 
         function toggleWarm(btn, id) {
             if (!isLoggedIn) { alert('登录后才能暖一下'); return; }
-            btn.classList.toggle('active');
-            const count = btn.querySelector('span:last-child');
-            const post = treeholePosts.find(p => p.id === id);
-            if (post) {
-                if (btn.classList.contains('active')) {
-                    post.warms++;
-                    warmedPosts.add(id);
-                } else {
-                    post.warms--;
-                    warmedPosts.delete(id);
-                }
-                count.textContent = post.warms;
+            const post = treeholePosts.find(p => String(p.id) === String(id));
+            if (!post) return;
+            const base = post.baseWarms !== undefined ? post.baseWarms : post.warms;
+            if (warmedPosts.has(id)) {
+                warmedPosts.delete(id);
+            } else {
+                warmedPosts.add(id);
             }
+            post.warms = warmedPosts.has(id) ? base + 1 : base;
             localStorage.setItem('warmedPosts', JSON.stringify([...warmedPosts]));
+            renderTreeholeFull();
         }
 
         function toggleHug(btn, id) {
             if (!isLoggedIn) { alert('登录后才能抱抱'); return; }
-            btn.classList.toggle('active');
-            const count = btn.querySelector('span:last-child');
-            const post = treeholePosts.find(p => p.id === id);
-            if (post) {
-                if (btn.classList.contains('active')) {
-                    post.hugs++;
-                    huggedPosts.add(id);
-                } else {
-                    post.hugs--;
-                    huggedPosts.delete(id);
-                }
-                count.textContent = post.hugs;
+            const post = treeholePosts.find(p => String(p.id) === String(id));
+            if (!post) return;
+            const base = post.baseHugs !== undefined ? post.baseHugs : post.hugs;
+            if (huggedPosts.has(id)) {
+                huggedPosts.delete(id);
+            } else {
+                huggedPosts.add(id);
             }
+            post.hugs = huggedPosts.has(id) ? base + 1 : base;
             localStorage.setItem('huggedPosts', JSON.stringify([...huggedPosts]));
+            renderTreeholeFull();
         }
 
         // ========== 树洞评论功能 ==========
