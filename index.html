@@ -2502,6 +2502,15 @@
             .sidebar {
                 display: none;
             }
+
+            .mobile-hot-topics {
+                display: block !important;
+            }
+        }
+
+        /* 移动端热门话题默认隐藏 */
+        .mobile-hot-topics {
+            display: none;
         }
 
         @media (max-width: 768px) {
@@ -5225,6 +5234,8 @@
                     </div>
                 </aside>
             </div>
+            <!-- 移动端热门话题（桌面端隐藏） -->
+            <div class="mobile-hot-topics" id="mobile-hot-topics" style="margin-top: 20px;"></div>
         </div>
 
         <!-- 板块详情页 -->
@@ -6685,8 +6696,7 @@
         }
 
         function renderHotTopics() {
-            const container = document.getElementById('hot-topics');
-            container.innerHTML = hotTopics.map((topic, i) => `
+            const topicsHtml = hotTopics.map((topic, i) => `
                 <div class="hot-topic" onclick="openHotTopic(${i})" style="cursor:pointer;">
                     <div class="hot-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
                     <div class="hot-content">
@@ -6695,6 +6705,21 @@
                     </div>
                 </div>
             `).join('');
+            
+            // 渲染到侧边栏（桌面端）
+            const container = document.getElementById('hot-topics');
+            if (container) container.innerHTML = topicsHtml;
+            
+            // 渲染到移动端区域
+            const mobileContainer = document.getElementById('mobile-hot-topics');
+            if (mobileContainer) {
+                mobileContainer.innerHTML = `
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">🔥 热议话题</h3>
+                        ${topicsHtml}
+                    </div>
+                `;
+            }
         }
 
         function openHotTopic(index) {
