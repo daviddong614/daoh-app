@@ -6203,10 +6203,10 @@
 
         // 初始化首页模块
         function initHomeModules() {
-            initGoldenQuote();
-            initTodayTopic();
-            renderInterestCircles(); // 动态渲染，确保名称与categories数据同步
-            updateHomeUserInfo();
+            try { initGoldenQuote(); } catch(e) { console.error('initGoldenQuote failed:', e); }
+            try { initTodayTopic(); } catch(e) { console.error('initTodayTopic failed:', e); }
+            try { renderInterestCircles(); } catch(e) { console.error('renderInterestCircles failed:', e); }
+            try { updateHomeUserInfo(); } catch(e) { console.error('updateHomeUserInfo failed:', e); }
         }
 
         // 金句卡片关闭功能
