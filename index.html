@@ -4607,6 +4607,1275 @@
                 font-size: 16px;
             }
             
+            .man-treehole-icon,
+            .find-bro-icon {
+                font-size: 40px;
+            }
+            
+            .man-treehole-title,
+            .find-bro-title {
+                font-size: 20px;
+            }
+        }
+    
+        /* 移动端侧滑菜单 */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .mobile-menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a1f;
+            z-index: 9999;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+        }
+        .mobile-menu.active {
+            left: 0;
+        }
+        .mobile-menu-header {
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #2a2a30, #3a3a40);
+            border-bottom: 1px solid #3a3a40;
+        }
+        .mobile-menu-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mobile-menu-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #4a4a50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .mobile-menu-name {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .mobile-menu-desc {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .mobile-menu-items {
+            padding: 16px 0;
+        }
+        .mobile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            color: #ccc;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .mobile-menu-item:hover,
+        .mobile-menu-item:active {
+            background: rgba(255,255,255,0.05);
+        }
+        .mobile-menu-item-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        .mobile-menu-divider {
+            height: 1px;
+            background: #2a2a30;
+            margin: 8px 20px;
+        }
+</style>
+</head>
+<body>
+    <!-- 登录页 -->
+    <div class="login-page" id="login-page">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <span class="logo-bg"></span>
+                    <span class="logo-fg">合</span>
+                </div>
+                <h1 class="login-title">道合</h1>
+                <p class="login-subtitle">后半生，得有几个懂自己的人</p>
+                
+                <!-- 主文案：核心情感触点 -->
+                <div class="login-main-slogan">
+                    <p class="slogan-line">有些路，走着走着就剩自己了。</p>
+                    <div class="slogan-divider"></div>
+                    <p class="slogan-line">但在这里，你不是一个人。</p>
+                </div>
+                
+                <p class="login-slogan">「历经风雨，终得道合」</p>
+            </div>
+            
+            <div class="login-card">
+                <!-- 昵称+密码登录/注册 -->
+                <div class="login-step active" id="step-phone">
+                    <h2 class="step-title">欢迎回来</h2>
+                    <p class="step-desc">新用户自动注册，老用户直接登录</p>
+                    
+                    <div class="login-form-group">
+                        <label class="login-label">昵称</label>
+                        <input type="text" class="login-input" id="login-nickname" placeholder="给自己起个响亮的名字" maxlength="20">
+                    </div>
+                    
+                    <div class="login-form-group">
+                        <label class="login-label">密码</label>
+                        <input type="password" class="login-input" id="login-password" placeholder="至少4位密码" maxlength="20">
+                    </div>
+                    
+                    <button class="login-btn" onclick="handleLoginOrRegister()">进入道合</button>
+                    
+                    <button class="guest-entrance" onclick="enterAsGuest()">
+                        <span>👁️</span> 先逛逛
+                    </button>
+                </div>
+                
+                
+            </div>
+            
+            <p class="login-agreement">
+                登录即表示同意<a href="#">《用户协议》</a>和<a href="#">《隐私政策》</a><br>
+                道合严格保护您的个人信息安全
+            </p>
+        </div>
+    </div>
+
+    <!-- 基本信息填写弹窗 -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">完善个人信息</h3>
+            </div>
+            <div class="modal-body">
+                <div class="profile-form-section">
+                    <div class="profile-section-title">基本信息</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">昵称<span class="required">*</span></label>
+                        <input type="text" class="form-input" id="profile-nickname" placeholder="给自己起个响亮的名字" maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">年代<span class="required">*</span></label>
+                        <select class="form-input form-select" id="profile-birthyear">
+                            <option value="">请选择您的年代</option>
+                            <option value="1960s">60后</option>
+                            <option value="1970s">70后</option>
+                            <option value="1980s">80后</option>
+                            <option value="1990s">90后</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">所在省份<span class="required">*</span></label>
+                        <select class="form-input form-select" id="profile-province">
+                            <option value="">请选择所在省份</option>
+                            <option value="北京市">北京市</option>
+                            <option value="天津市">天津市</option>
+                            <option value="河北省">河北省</option>
+                            <option value="山西省">山西省</option>
+                            <option value="内蒙古自治区">内蒙古自治区</option>
+                            <option value="辽宁省">辽宁省</option>
+                            <option value="吉林省">吉林省</option>
+                            <option value="黑龙江省">黑龙江省</option>
+                            <option value="上海市">上海市</option>
+                            <option value="江苏省">江苏省</option>
+                            <option value="浙江省">浙江省</option>
+                            <option value="安徽省">安徽省</option>
+                            <option value="福建省">福建省</option>
+                            <option value="江西省">江西省</option>
+                            <option value="山东省">山东省</option>
+                            <option value="河南省">河南省</option>
+                            <option value="湖北省">湖北省</option>
+                            <option value="湖南省">湖南省</option>
+                            <option value="广东省">广东省</option>
+                            <option value="广西壮族自治区">广西壮族自治区</option>
+                            <option value="海南省">海南省</option>
+                            <option value="重庆市">重庆市</option>
+                            <option value="四川省">四川省</option>
+                            <option value="贵州省">贵州省</option>
+                            <option value="云南省">云南省</option>
+                            <option value="西藏自治区">西藏自治区</option>
+                            <option value="陕西省">陕西省</option>
+                            <option value="甘肃省">甘肃省</option>
+                            <option value="青海省">青海省</option>
+                            <option value="宁夏回族自治区">宁夏回族自治区</option>
+                            <option value="新疆维吾尔自治区">新疆维吾尔自治区</option>
+                            <option value="台湾省">台湾省</option>
+                            <option value="香港特别行政区">香港特别行政区</option>
+                            <option value="澳门特别行政区">澳门特别行政区</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="profile-form-section">
+                    <div class="profile-section-title">兴趣爱好（选1-5个）<span class="required">*</span></div>
+                    <div class="hobby-grid" id="hobby-grid">
+                        <div class="hobby-option" data-id="fishing" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🎣</div>
+                            <div class="hobby-name">钓鱼</div>
+                        </div>
+                        <div class="hobby-option" data-id="tea" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🍵</div>
+                            <div class="hobby-name">品茶</div>
+                        </div>
+                        <div class="hobby-option" data-id="collecting" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">📿</div>
+                            <div class="hobby-name">文玩盘串</div>
+                        </div>
+                        <div class="hobby-option" data-id="wine" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🍷</div>
+                            <div class="hobby-name">酒文化</div>
+                        </div>
+                        <div class="hobby-option" data-id="chess" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🀄</div>
+                            <div class="hobby-name">棋牌</div>
+                        </div>
+                        <div class="hobby-option" data-id="health" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🧘</div>
+                            <div class="hobby-name">养生</div>
+                        </div>
+                        <div class="hobby-option" data-id="photo" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">📷</div>
+                            <div class="hobby-name">摄影</div>
+                        </div>
+                        <div class="hobby-option" data-id="car" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🚗</div>
+                            <div class="hobby-name">汽车自驾</div>
+                        </div>
+                        <div class="hobby-option" data-id="history" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">📚</div>
+                            <div class="hobby-name">历史军事</div>
+                        </div>
+                        <div class="hobby-option" data-id="fitness" onclick="toggleHobby(this)">
+                            <div class="hobby-icon">🏃</div>
+                            <div class="hobby-name">运动健身</div>
+                        </div>
+                    </div>
+                    <div class="hobby-hint">已选择 <span id="hobby-count">0</span>/5 个兴趣</div>
+                </div>
+                
+                <div class="profile-form-section">
+                    <div class="profile-section-title">自我简介</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">一句话介绍自己<span class="optional">（选填）</span></label>
+                        <input type="text" class="form-input" id="profile-intro" placeholder="让同道中人更好地认识你" maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">选择头像<span class="optional">（选填）</span></label>
+                        <div class="avatar-select">
+                            <div class="avatar-option selected" data-avatar="👨" onclick="selectAvatar(this)">👨</div>
+                            <div class="avatar-option" data-avatar="🧔" onclick="selectAvatar(this)">🧔</div>
+                            <div class="avatar-option" data-avatar="👴" onclick="selectAvatar(this)">👴</div>
+                            <div class="avatar-option" data-avatar="🎭" onclick="selectAvatar(this)">🎭</div>
+                            <div class="avatar-option" data-avatar="🛡️" onclick="selectAvatar(this)">🛡️</div>
+                            <div class="avatar-option" data-avatar="⚔️" onclick="selectAvatar(this)">⚔️</div>
+                            <div class="avatar-option" data-avatar="🎣" onclick="selectAvatar(this)">🎣</div>
+                            <div class="avatar-option" data-avatar="🍵" onclick="selectAvatar(this)">🍵</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-form-section">
+                    <div class="profile-section-title">社区公约</div>
+                    <div class="community-covenant">
+                        <p class="covenant-intro">加入道合，即表示您认同以下社区公约：</p>
+                        <ul class="covenant-list">
+                            <li>道合是专注于中年男性生活方式与兴趣交流的社区</li>
+                            <li>尊重每一位道友，理性交流，不人身攻击</li>
+                            <li>遵守社区内容规范，不发布违规内容</li>
+                        </ul>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="covenant-agree" style="margin-right: 8px;">
+                            我已阅读并同意社区公约
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="completeProfile()">进入道合</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a href="#" class="logo" onclick="showPage('home')">
+            <div class="logo-icon">
+                <span class="logo-bg"></span>
+                <span class="logo-fg">合</span>
+            </div>
+            <div>
+                <div class="logo-text">道合</div>
+                <div class="logo-sub">中年男人的精神角落</div>
+            </div>
+        </a>
+        <div class="nav-actions">
+            <div class="guest-badge" id="guest-badge" style="display: none;">
+                <span>👤</span>
+                <span>游客</span>
+            </div>
+            <button class="nav-btn" onclick="showPage('home')">
+                <span>🏠</span> 首页
+            </button>
+            <button class="nav-btn" onclick="showPage('treehole')">
+                <span>🌙</span> 树洞
+            </button>
+            <button class="nav-btn" onclick="showPage('profile')">
+                <span>👤</span> 我的角落
+            </button>
+            <button class="nav-btn nav-btn-primary" onclick="openPostModal()">
+                <span>+</span> 说两句
+            </button>
+        </div>
+        <button class="menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    </nav>
+
+    <!-- 主容器 -->
+    <main class="main-container">
+        <!-- 登录引导条（游客模式显示） -->
+        <div class="login-guide-bar" id="login-guide-bar" style="display: none;">
+            <div class="login-guide-content">
+                <span class="login-guide-icon">👤</span>
+                <span class="login-guide-text">您当前为游客模式，部分功能受限</span>
+            </div>
+            <button class="login-guide-btn" onclick="document.getElementById('login-page').style.display='flex'; updateGuestUI();">登录/注册</button>
+        </div>
+
+        <!-- 首页 -->
+        <div id="page-home" class="page active">
+            <!-- 用户欢迎条 -->
+            <div class="user-welcome-bar">
+                <div class="user-welcome-left">
+                    <div class="user-welcome-avatar" id="home-user-avatar">👨</div>
+                    <div class="user-welcome-info">
+                        <h3 id="home-user-name">游客2734</h3>
+                        <p id="home-user-desc">志同道合，一路同行</p>
+                    </div>
+                </div>
+                <button class="user-welcome-btn" onclick="handleVerifyClick()">立即认证 →</button>
+            </div>
+
+            <!-- 模块化卡片区域 -->
+            <div class="home-modules">
+                <!-- 励志金句卡片 -->
+                <div class="golden-quote-card" id="golden-quote-card">
+                    <button class="golden-quote-close" onclick="closeGoldenQuote()">✕</button>
+                    <div class="golden-quote-text" id="golden-quote-text">正在加载...</div>
+                    <div class="golden-quote-footer" id="golden-quote-footer">— 致每一个扛起家的你</div>
+                </div>
+
+                <!-- 今日话题卡片 -->
+                <div class="today-topic-card">
+                    <div class="today-topic-header">
+                        <span class="today-topic-badge">🔥 今日话题</span>
+                        <span class="today-topic-date" id="topic-date"></span>
+                    </div>
+                    <div class="today-topic-question" id="today-topic-question">正在加载...</div>
+                    <div class="today-topic-input-row">
+                        <textarea class="today-topic-input" id="topic-answer" placeholder="分享你的看法..." maxlength="200"></textarea>
+                        <button class="today-topic-submit" onclick="submitTopicAnswer()">分享看法</button>
+                    </div>
+                    <div class="today-topic-char-count"><span id="topic-char-count">0</span>/200</div>
+                    <div class="today-topic-answers" id="today-topic-answers"></div>
+                </div>
+
+                <!-- 男人树洞入口卡片 -->
+                <div class="man-treehole-card" onclick="showPage('treehole')">
+                    <div class="man-treehole-header">
+                        <span class="man-treehole-icon">🌳</span>
+                        <div class="man-treehole-content">
+                            <div class="man-treehole-title">男人树洞</div>
+                            <div class="man-treehole-tags">
+                                <span class="man-treehole-tag">完全匿名</span>
+                                <span class="man-treehole-tag">匿名回应</span>
+                                <span class="man-treehole-tag">温暖支持</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="man-treehole-arrow">→</span>
+                </div>
+
+                <!-- 找兄弟入口卡片 -->
+                <div class="find-bro-card" onclick="showPage('find-bro')">
+                    <div class="find-bro-header">
+                        <span class="find-bro-icon">🤝</span>
+                        <span class="find-bro-title">找兄弟</span>
+                    </div>
+                    <span class="find-bro-arrow">→</span>
+                </div>
+
+                <!-- 线下活动入口卡片 -->
+                <div class="offline-activity-card" onclick="showPage('offline-activity')">
+                    <div class="offline-activity-header">
+                        <span class="offline-activity-icon">🎉</span>
+                        <div class="offline-activity-content">
+                            <div class="offline-activity-title">线下活动</div>
+                            <div class="offline-activity-desc">走出家门，和兄弟们面对面交流</div>
+                        </div>
+                    </div>
+                    <span class="offline-activity-arrow">→</span>
+                </div>
+
+                <!-- 作品展示墙入口卡片 - 绿青色渐变背景 -->
+                <div class="works-showcase-card" onclick="showPage('works-showcase')">
+                    <div class="works-showcase-header">
+                        <span class="works-showcase-icon">🎨</span>
+                        <div class="works-showcase-content">
+                            <div class="works-showcase-title">作品展示墙</div>
+                            <div class="works-showcase-desc">分享厨艺园艺作品，展示生活之美</div>
+                        </div>
+                    </div>
+                    <span class="works-showcase-arrow">→</span>
+                </div>
+            </div>
+
+            <!-- 兴趣圈子 - 2列网格 -->
+            <h2 class="section-title">同道板块</h2>
+            <div class="interest-circles-grid" id="interest-circles-grid">
+                <!-- 由 renderInterestCircles() 动态渲染 -->
+            </div>
+
+            <!-- 热门内容 -->
+            <h2 class="section-title">热门话题</h2>
+            <div class="content-layout">
+                <div class="post-list" id="hot-posts"></div>
+                <aside class="sidebar">
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">🔥 热议话题</h3>
+                        <div id="hot-topics"></div>
+                    </div>
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">📅 本周活跃</h3>
+                        <div id="active-users"></div>
+                    </div>
+                </aside>
+            </div>
+            <!-- 移动端热门话题（桌面端隐藏） -->
+            <div class="mobile-hot-topics" id="mobile-hot-topics" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- 板块详情页 -->
+        <div id="page-category" class="page">
+            <div id="category-detail"></div>
+        </div>
+
+        <!-- 找兄弟页面 -->
+        <div id="page-find-bro" class="page">
+            <div class="find-bro-page">
+                <div class="back-btn" onclick="showPage('home')">
+                    <span>←</span> 返回首页
+                </div>
+                
+                <div class="find-bro-header-section">
+                    <div class="find-bro-page-title">🤝 找兄弟</div>
+                    <p class="find-bro-page-desc">志同道合，一起走更远</p>
+                </div>
+
+                <!-- 匹配结果区域 -->
+                <div id="find-bro-match">
+                    <!-- 未完善资料时的空状态 -->
+                    <div class="match-empty-state" id="match-empty-state" style="display: none;">
+                        <div class="match-empty-icon">🤝</div>
+                        <div class="match-empty-title">完善资料后，系统帮你找到志同道合的兄弟</div>
+                        <div class="match-empty-desc">
+                            先告诉我们你是谁，我们帮你匹配兴趣相投的兄弟
+                        </div>
+                        <button class="match-empty-btn" onclick="document.getElementById('profile-modal').classList.add('active')">
+                            <span>📝</span> 完善资料
+                        </button>
+                    </div>
+                    
+                    <!-- 已完善资料时的匹配结果 -->
+                    <div id="match-result-container" style="display: none;">
+                        <!-- 推荐用户卡片（模拟数据） -->
+                        <div class="match-users-grid" id="match-users-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 线下活动页面 -->
+        <div id="page-offline-activity" class="page">
+            <div class="offline-activity-page">
+                <div class="back-btn" onclick="showPage('home')">
+                    <span>←</span> 返回首页
+                </div>
+                
+                <div class="offline-activity-page-header">
+                    <div class="offline-activity-page-title">🎉 线下活动</div>
+                    <p class="offline-activity-page-desc">走出家门，和兄弟们面对面</p>
+                </div>
+
+                <!-- 活动列表 -->
+                <div class="activity-list">
+                    <div class="activity-card">
+                        <div class="activity-card-header">
+                            <span class="activity-card-icon">🎣</span>
+                            <div class="activity-card-info">
+                                <div class="activity-card-title">周末钓鱼聚会</div>
+                                <div class="activity-card-meta">
+                                    <span>📅 本周六</span>
+                                    <span>📍 朝阳区奥林匹克公园</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-card-footer">
+                            <span class="activity-card-members">12人已报名</span>
+                            <button class="activity-card-btn" onclick="showToast('报名成功！')">报名</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-card">
+                        <div class="activity-card-header">
+                            <span class="activity-card-icon">🍵</span>
+                            <div class="activity-card-info">
+                                <div class="activity-card-title">茶友品鉴会</div>
+                                <div class="activity-card-meta">
+                                    <span>📅 下周日</span>
+                                    <span>📍 西湖区龙井村</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-card-footer">
+                            <span class="activity-card-members">8人已报名</span>
+                            <button class="activity-card-btn" onclick="showToast('报名成功！')">报名</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-card">
+                        <div class="activity-card-header">
+                            <span class="activity-card-icon">🚗</span>
+                            <div class="activity-card-info">
+                                <div class="activity-card-title">自驾川西行</div>
+                                <div class="activity-card-meta">
+                                    <span>📅 6月出发</span>
+                                    <span>📍 成都集合</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-card-footer">
+                            <span class="activity-card-members">已满员</span>
+                            <button class="activity-card-btn full" disabled>已满</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-card">
+                        <div class="activity-card-header">
+                            <span class="activity-card-icon">🏌️</span>
+                            <div class="activity-card-info">
+                                <div class="activity-card-title">高尔夫友谊赛</div>
+                                <div class="activity-card-meta">
+                                    <span>📅 6月中旬</span>
+                                    <span>📍 顺义高尔夫球会</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-card-footer">
+                            <span class="activity-card-members">20人已报名</span>
+                            <button class="activity-card-btn" onclick="showToast('报名成功！')">报名</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-card">
+                        <div class="activity-card-header">
+                            <span class="activity-card-icon">📷</span>
+                            <div class="activity-card-info">
+                                <div class="activity-card-title">摄影外拍活动</div>
+                                <div class="activity-card-meta">
+                                    <span>📅 每周末</span>
+                                    <span>📍 京城各处取景</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-card-footer">
+                            <span class="activity-card-members">15人已报名</span>
+                            <button class="activity-card-btn" onclick="showToast('报名成功！')">报名</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="offline-activity-more">更多活动，敬请期待</div>
+            </div>
+        </div>
+
+        <!-- 作品展示墙页面 -->
+        <div id="page-works-showcase" class="page">
+            <div class="works-showcase-page">
+                <button class="back-btn" onclick="showPage('home')">
+                    <span>←</span> 返回
+                </button>
+                <div class="works-showcase-header-section">
+                    <div class="works-showcase-page-title">🎨 作品展示墙</div>
+                    <p class="works-showcase-page-desc">生活之美，由你创造</p>
+                </div>
+
+                <!-- 作品瀑布流网格 -->
+                <div class="works-masonry-grid" id="works-grid">
+                    <div class="work-item" onclick="showWorkDetail(1)">
+                        <div class="work-image" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">
+                            <span style="font-size: 48px;">🍖</span>
+                        </div>
+                        <div class="work-info">
+                            <div class="work-title">周末做的红烧肉</div>
+                            <div class="work-author">老陈 · 238赞</div>
+                        </div>
+                    </div>
+                    <div class="work-item" onclick="showWorkDetail(2)">
+                        <div class="work-image" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                            <span style="font-size: 48px;">🌵</span>
+                        </div>
+                        <div class="work-info">
+                            <div class="work-title">阳台上的多肉</div>
+                            <div class="work-author">老王 · 186赞</div>
+                        </div>
+                    </div>
+                    <div class="work-item" onclick="showWorkDetail(3)">
+                        <div class="work-image" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                            <span style="font-size: 48px;">🍶</span>
+                        </div>
+                        <div class="work-info">
+                            <div class="work-title">自家酿的米酒</div>
+                            <div class="work-author">老李 · 312赞</div>
+                        </div>
+                    </div>
+                    <div class="work-item" onclick="showWorkDetail(4)">
+                        <div class="work-image" style="background: linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%);">
+                            <span style="font-size: 48px;">🌹</span>
+                        </div>
+                        <div class="work-info">
+                            <div class="work-title">院子里的月季</div>
+                            <div class="work-author">老张 · 275赞</div>
+                        </div>
+                    </div>
+                    <div class="work-item" onclick="showWorkDetail(5)">
+                        <div class="work-image" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);">
+                            <span style="font-size: 48px;">🍜</span>
+                        </div>
+                        <div class="work-info">
+                            <div class="work-title">手工拉面的诱惑</div>
+                            <div class="work-author">老赵 · 198赞</div>
+                        </div>
+                    </div>
+                    <div class="work-item" onclick="showWorkDetail(6)">
+                        <div class="work-image" style="background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);">
+                            <span style="font-size: 48px;">🌿</span>
+                        </div>
+                        <div class="work-info">
+                            <div class="work-title">阳台小菜园</div>
+                            <div class="work-author">老刘 · 156赞</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="works-showcase-publish">
+                    <button class="btn btn-works-publish" onclick="showToast('发布功能开发中...')">
+                        <span>📷</span> 发布作品
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 树洞页面 -->
+        <div id="page-treehole" class="page treehole-page">
+            <div class="treehole-page-content">
+                <!-- 深夜树洞页面专属标题 -->
+                <div class="treehole-deep-night-header" id="treehole-deep-night-header">
+                    <div class="deep-night-title">🌙 深夜树洞</div>
+                    <div class="deep-night-hint">夜深了，放心说</div>
+                </div>
+                <section class="treehole-section">
+                    <div class="treehole-header">
+                        <div class="treehole-title">
+                            <span class="treehole-icon">🌙</span>
+                            <span id="treehole-page-title">树洞</span>
+                        </div>
+                        <span class="treehole-badge">匿名倾诉</span>
+                    </div>
+                    
+                    <!-- 分类标签筛选 -->
+                    <div class="treehole-tags">
+                        <button class="treehole-tag-btn active" onclick="filterTreeholeTag(this, 'all')">全部</button>
+                        <button class="treehole-tag-btn" onclick="filterTreeholeTag(this, 'work')">职场困境</button>
+                        <button class="treehole-tag-btn" onclick="filterTreeholeTag(this, 'family')">经济压力</button>
+                        <button class="treehole-tag-btn" onclick="filterTreeholeTag(this, 'midlife')">空巢感</button>
+                        <button class="treehole-tag-btn" onclick="filterTreeholeTag(this, 'health')">健康焦虑</button>
+                        <button class="treehole-tag-btn" onclick="filterTreeholeTag(this, 'emotion')">情感困惑</button>
+                        <button class="treehole-tag-btn" onclick="filterTreeholeTag(this, 'free')">男人的脆弱</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn btn-primary" onclick="openTreeholePostModal()">
+                            <span>📝</span> 倾诉一下
+                        </button>
+                    </div>
+                    <div class="treehole-list" id="treehole-full"></div>
+                    
+                    <!-- 树洞底部标语 -->
+                    <div class="treehole-bottom-message">
+                        <p>你不是一个人。</p>
+                        <p>全国有3.5亿中年男人，都在经历你经历的事。</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- 帖子详情页 -->
+        <div id="page-post" class="page">
+            <div id="post-detail"></div>
+        </div>
+    </main>
+
+    <!-- 发帖弹窗 -->
+    <div class="modal-overlay" id="post-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">说两句</h3>
+                <button class="modal-close" onclick="closePostModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">选择板块</label>
+                    <select class="form-input form-select" id="post-category">
+                        <option value="">请选择板块</option>
+                        <option value="fishing">🎣 钓鱼</option>
+                        <option value="tea">🍵 品茶</option>
+                        <option value="collecting">📿 文玩盘串</option>
+                        <option value="wine">🍷 酒文化</option>
+                        <option value="chess">🀄 棋牌</option>
+                        <option value="health">🧘 养生</option>
+                        <option value="photo">📷 摄影</option>
+                        <option value="car">🚗 汽车自驾</option>
+                        <option value="history">📚 历史军事</option>
+                        <option value="fitness">🏃 运动健身</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" class="form-input" id="post-title" placeholder="输入帖子标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">内容</label>
+                    <textarea class="form-input" id="post-content" placeholder="想说点什么……"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">添加图片/视频</label>
+                    <div class="upload-area-compact" onclick="document.getElementById('file-input').click()">
+                        <div class="upload-add-btn">+</div>
+                        <div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">点击上传</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">图片最多9张，视频1个</div>
+                        </div>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*,video/*" multiple style="display: none;" onchange="handleFileUpload(this)">
+                    <div class="preview-list" id="upload-preview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePostModal()">再想想</button>
+                <button class="btn btn-primary" onclick="submitPost()">发出去</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 树洞弹窗 -->
+    <div class="modal-overlay" id="treehole-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🌙 倾诉一下</h3>
+                <button class="modal-close" onclick="closeTreeholeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(92, 64, 51, 0.1); border: 1px solid rgba(92, 64, 51, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.7;">
+                        这里是你的私密角落，可以放下所有防备。无需注册，无需署名，说出那些藏在心里的话。
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">想说什么？</label>
+                    <textarea class="form-input" id="treehole-content" placeholder="在这里倾诉..." style="min-height: 180px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="upload-area-compact" onclick="document.getElementById('treehole-file-input').click()" style="border-color: rgba(92, 64, 51, 0.5);">
+                        <div class="upload-add-btn" style="border-color: rgba(92, 64, 51, 0.5);">+</div>
+                        <div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">添加图片</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">匿名+图片，更真实</div>
+                        </div>
+                    </div>
+                    <input type="file" id="treehole-file-input" accept="image/*" multiple style="display: none;" onchange="handleTreeholeFileUpload(this)">
+                    <div class="preview-list" id="treehole-upload-preview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTreeholeModal()">算了</button>
+                <button class="btn btn-primary" onclick="submitTreehole()" style="background: linear-gradient(135deg, var(--accent-brown), #7a5a45);">倾诉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 树洞发布弹窗（增强版） -->
+    <div class="modal-overlay treehole-post-modal" id="treehole-post-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🌙 深夜倾诉</h3>
+                <button class="modal-close" onclick="closeTreeholePostModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="treehole-intro">
+                    <p>有些话，说出来就好。在这里，没有身份的束缚，没有世俗的眼光。尽情倾诉，我们都在。</p>
+                </div>
+                
+                <div class="anonymous-preview" id="anonymous-preview">
+                    <div class="anonymous-preview-avatar">👤</div>
+                    <div>
+                        <div class="anonymous-preview-name" id="anonymous-name">夜行人#3782</div>
+                        <div class="anonymous-preview-hint">系统随机分配，保护您的隐私</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">选择倾诉分类</label>
+                    <div class="tag-select-grid" id="treehole-tag-select">
+                        <div class="tag-option" data-tag="work" onclick="selectTreeholeTag(this)">💼 工作压力</div>
+                        <div class="tag-option" data-tag="family" onclick="selectTreeholeTag(this)">👨‍👩‍👧 家庭关系</div>
+                        <div class="tag-option" data-tag="midlife" onclick="selectTreeholeTag(this)">🌅 中年危机</div>
+                        <div class="tag-option" data-tag="health" onclick="selectTreeholeTag(this)">💪 健康焦虑</div>
+                        <div class="tag-option" data-tag="emotion" onclick="selectTreeholeTag(this)">💔 情感困惑</div>
+                        <div class="tag-option" data-tag="free" onclick="selectTreeholeTag(this)">🌿 自由倾诉</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">倾诉内容</label>
+                    <textarea class="form-input" id="treehole-post-content" placeholder="在这里说出心里话..." style="min-height: 160px; background: rgba(26, 26, 31, 0.6); color: #e0d8d0 !important;"></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="upload-area-compact" onclick="document.getElementById('treehole-post-file-input').click()" style="border-color: rgba(92, 64, 51, 0.5);">
+                        <div class="upload-add-btn" style="border-color: rgba(92, 64, 51, 0.5);">+</div>
+                        <div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">添加图片</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">匿名+图片，更真实</div>
+                        </div>
+                    </div>
+                    <input type="file" id="treehole-post-file-input" accept="image/*" multiple style="display: none;" onchange="handleTreeholePostFileUpload(this)">
+                    <div class="preview-list" id="treehole-post-upload-preview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTreeholePostModal()">再想想</button>
+                <button class="btn btn-primary" onclick="submitTreeholePost()" style="background: linear-gradient(135deg, var(--accent-brown), #7a5a45);">🌙 倾诉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 情绪温度计 -->
+    <div class="mood-overlay" id="mood-overlay">
+        <div class="mood-card">
+            <div class="mood-greeting" id="mood-greeting">今天怎么样？</div>
+            <div class="mood-hint">说一声，兄弟们都在</div>
+            <div class="mood-options">
+                <button class="mood-btn" onclick="selectMood('terrible')">
+                    <span class="mood-icon">😫</span>
+                    <span class="mood-text">撑不住</span>
+                </button>
+                <button class="mood-btn" onclick="selectMood('low')">
+                    <span class="mood-icon">😔</span>
+                    <span class="mood-text">有点低落</span>
+                </button>
+                <button class="mood-btn" onclick="selectMood('okay')">
+                    <span class="mood-icon">😐</span>
+                    <span class="mood-text">还行吧</span>
+                </button>
+                <button class="mood-btn" onclick="selectMood('good')">
+                    <span class="mood-icon">🙂</span>
+                    <span class="mood-text">还不错</span>
+                </button>
+                <button class="mood-btn" onclick="selectMood('great')">
+                    <span class="mood-icon">😊</span>
+                    <span class="mood-text">挺好的</span>
+                </button>
+            </div>
+            <button class="mood-skip" onclick="skipMood()">先不说 →</button>
+        </div>
+    </div>
+
+    <!-- 每日一问弹窗 -->
+    <div class="modal-overlay question-modal" id="question-modal" onclick="if(event.target===this)closeQuestionModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">今日一问</h3>
+                <button class="modal-close" onclick="closeQuestionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="question-display">
+                    <div class="question-display-text" id="question-text"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">匿名回答</label>
+                    <textarea class="form-input" id="question-answer" placeholder="想说点什么……" style="min-height: 100px;"></textarea>
+                </div>
+                <div class="answers-preview" id="answers-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeQuestionModal()">算了</button>
+                <button class="btn btn-primary" onclick="submitQuestionAnswer()">说两句</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 过来人说页面 -->
+    <div id="page-veteran" class="page">
+        <div class="profile-corner">
+            <div class="back-btn" onclick="showPage('home')">
+                <span>←</span> 返回首页
+            </div>
+            <div class="veteran-section" style="padding: 0; border: none; background: transparent;">
+                <div class="veteran-header">
+                    <span class="veteran-icon">💪</span>
+                    <span class="veteran-title">过来人说</span>
+                </div>
+                <p class="veteran-intro">不是心灵鸡汤，是真实经历。这里每一句话，都是扛过来的人说的。</p>
+                <div class="veteran-list" id="veteran-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 个人角落页面 -->
+    <div id="page-profile" class="page">
+        <div class="profile-corner">
+            <div class="back-btn" onclick="showPage('home')">
+                <span>←</span> 返回首页
+            </div>
+            <div class="corner-header">
+                <div class="corner-avatar" id="profile-avatar">👨</div>
+                <div class="corner-info">
+                    <h1 id="corner-nickname">道友</h1>
+                    <div class="corner-stats">
+                        <div class="corner-stat">
+                            <span>🏠</span>
+                            <span>道行：</span>
+                            <span class="corner-stat-value" id="profile-dao">1年</span>
+                        </div>
+                        <div class="corner-stat">
+                            <span>📝</span>
+                            <span>说过的话：</span>
+                            <span class="corner-stat-value" id="profile-posts">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="corner-card">
+                <div class="corner-card-title">年度回顾</div>
+                <div class="year-review">
+                    <div class="year-review-text" id="year-review-text">
+                        这一年，你在这说了 <span class="year-review-highlight">0</span> 句话，<br>
+                        暖了 <span class="year-review-highlight">0</span> 个人，被 <span class="year-review-highlight">0</span> 个人暖过。<br><br>
+                        每句话都是痕迹，记住就好。
+                    </div>
+                </div>
+            </div>
+            <div class="corner-card">
+                <div class="corner-card-title">常驻板块</div>
+                <div id="profile-hobbies" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+            </div>
+            <div class="corner-card">
+                <div class="corner-card-title">账号管理</div>
+                <button class="logout-btn" onclick="logout()" style="
+                    width: 100%;
+                    padding: 12px 16px;
+                    background: #f5f5f5;
+                    border: 1px solid #e5e5e5;
+                    border-radius: 8px;
+                    color: #666;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                " onmouseover="this.style.background='#f0f0f0';this.style.color='#333';" onmouseout="this.style.background='#f5f5f5';this.style.color='#666';">
+                    🚪 退出登录
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 举报弹窗 -->
+    <div class="modal-overlay" id="report-modal" onclick="if(event.target===this)closeReportModal()">
+        <div class="report-modal">
+            <div class="modal-header" style="padding: 0; border: none; margin-bottom: 16px;">
+                <h3 class="modal-title">反馈</h3>
+                <button class="modal-close" onclick="closeReportModal()">×</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary);">哪里不妥？</p>
+            <div class="report-reasons">
+                <button class="report-reason" data-reason="inappropriate" onclick="selectReportReason(this)">不当言论</button>
+                <button class="report-reason" data-reason="fake" onclick="selectReportReason(this)">虚假信息</button>
+                <button class="report-reason" data-reason="attack" onclick="selectReportReason(this)">人身攻击</button>
+                <button class="report-reason" data-reason="ad" onclick="selectReportReason(this)">广告骚扰</button>
+                <button class="report-reason" data-reason="other" onclick="selectReportReason(this)">其他</button>
+            </div>
+            <div class="modal-footer" style="padding-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeReportModal()">算了</button>
+                <button class="btn btn-primary" onclick="submitReport()" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">反馈</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 用户登录状态
+        let isLoggedIn = false;
+        let isGuest = true;  // 默认游客模式
+        let userName = '';
+        let userAvatar = '👨';
+        let selectedHobbies = [];
+        let userPostCount = 0;
+        let userViolations = 0;
+
+        // ==================== Supabase 初始化 ====================
+        const SUPABASE_URL = 'https://tsxrlwxleglqkfibddvl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzeHJsd3hsZWdscWtmaWJkZHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDI1MzYsImV4cCI6MjA5NjU3ODUzNn0.7xz5qn8SmwkeOY67nEXUBFqQdAMPuOoby7S29eJBUKk';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // localStorage 兼容：仍用 localStorage 缓存当前登录用户昵称
+        const CURRENT_USER_KEY = 'daohes_current_user';
+
+        // 初始化：从 Supabase 恢复登录状态
+        async function initUserData() {
+            const currentUser = localStorage.getItem(CURRENT_USER_KEY);
+            
+            if (currentUser) {
+                const { data, error } = await sb.from('users').select('*').eq('nickname', currentUser).single();
+                if (data) {
+                    isLoggedIn = true;
+                    isGuest = false;
+                    userName = currentUser;
+                    userAvatar = data.avatar || '👨';
+                    selectedHobbies = data.hobbies || [];
+                    return true;
+                } else {
+                    // 本地缓存过期，清除
+                    localStorage.removeItem(CURRENT_USER_KEY);
+                }
+            }
+            return false;
+        }
+
+        // 注册新用户（写入 Supabase）
+        async function registerUser(nickname, password) {
+            const { data, error } = await sb.from('users').insert([{
+                nickname: nickname,
+                password_hash: password,
+                avatar: '👨',
+                birthyear: '',
+                hobbies: [],
+                intro: '',
+                province: ''
+            }]).select().single();
+            if (error) {
+                console.error('注册失败:', error);
+                return null;
+            }
+            localStorage.setItem(CURRENT_USER_KEY, nickname);
+            return data;
+        }
+
+        // 验证用户登录（查询 Supabase）
+        async function verifyUser(nickname, password) {
+            const { data, error } = await sb.from('users').select('*').eq('nickname', nickname).eq('password_hash', password).single();
+            if (data) {
+                localStorage.setItem(CURRENT_USER_KEY, nickname);
+                return true;
+            }
+            return false;
+        }
+
+        // 检查昵称是否已存在
+        async function checkNicknameExists(nickname) {
+            const { data, error } = await sb.from('users').select('nickname').eq('nickname', nickname).single();
+            return !!data;
+        }
+
+        // 更新当前用户数据
+        async function updateCurrentUserData(data) {
+            const currentUser = localStorage.getItem(CURRENT_USER_KEY);
+            if (!currentUser) return false;
+            
+            const { error } = await sb.from('users').update(data).eq('nickname', currentUser);
+            return !error;
+        }
+
+        // 获取当前用户数据
+        async function getCurrentUserData() {
+            const currentUser = localStorage.getItem(CURRENT_USER_KEY);
+            if (!currentUser) return null;
+            
+            const { data, error } = await sb.from('users').select('*').eq('nickname', currentUser).single();
+            return data || null;
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem(CURRENT_USER_KEY);
+            isLoggedIn = false;
+            isGuest = true;
+            userName = '';
+            userAvatar = '👨';
+            selectedHobbies = [];
+            showToast('已退出登录');
+            
+            // 更新UI
+            updateLoggedInUI();
+            updateGuestUI();
+            
+            // 返回首页
+            showPage('home');
+        }
+
+        // 昵称+密码 登录/注册处理
+        async function handleLoginOrRegister() {
+            const nickname = document.getElementById('login-nickname').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (!nickname) {
+                showToast('请输入昵称');
+                return;
+            }
+            
+            if (nickname.length < 2) {
+                showToast('昵称至少2个字符');
+                return;
+            }
+            
+            if (!password || password.length < 4) {
+                showToast('密码至少4位');
+                return;
+            }
+            
+            const exists = await checkNicknameExists(nickname);
+            
+            if (exists) {
+                // 用户已存在，验证密码
+                const valid = await verifyUser(nickname, password);
+                if (valid) {
+                    // 登录成功
+                    const userData = await getCurrentUserData();
+                    userName = nickname;
+                    userAvatar = userData?.avatar || '👨';
+                    selectedHobbies = userData?.hobbies || [];
+                    isLoggedIn = true;
+                    isGuest = false;
+                    
+                    document.getElementById('login-page').style.display = 'none';
+                    updateLoggedInUI();
+                    updateGuestUI();
+                    showToast(`欢迎回来，${userName}！`);
+                } else {
+                    showToast('密码错误');
+                }
+            } else {
+                // 新用户，自动注册
+                const newUser = await registerUser(nickname, password);
+                if (!newUser) {
+                    showToast('注册失败，请重试');
+                    return;
+                }
+                userName = nickname;
+                userAvatar = newUser.avatar || '👨';
+                selectedHobbies = newUser.hobbies || [];
+                isLoggedIn = true;
+                isGuest = false;
+                
+                document.getElementById('login-page').style.display = 'none';
+                updateLoggedInUI();
+                updateGuestUI();
+                showToast(`注册成功，欢迎，${userName}！`);
+                
+                // 首次注册后弹出完善信息弹窗
+                setTimeout(() => {
+                    document.getElementById('profile-modal').classList.add('active');
+                    document.getElementById('profile-nickname').value = nickname;
+                    document.getElementById('profile-nickname').readOnly = true;
+                }, 500);
+            }
+        }
+
+        // 更新已登录状态UI
+        function updateLoggedInUI() {
+            const homeUserAvatar = document.getElementById('home-user-avatar');
+            const homeUserName = document.getElementById('home-user-name');
+            const homeUserDesc = document.getElementById('home-user-desc');
+            const verifyBtn = document.querySelector('.user-welcome-btn');
+            
+            if (isLoggedIn && !isGuest) {
+                if (homeUserAvatar) homeUserAvatar.textContent = userAvatar;
+                if (homeUserName) homeUserName.textContent = userName;
+                if (homeUserDesc) homeUserDesc.textContent = '志同道合，一路同行';
+                if (verifyBtn) verifyBtn.textContent = '我的 →';
+            }
+        }
+
+        // 首页新功能相关变量
+        let selectedAgeRange = null;
+        let currentBroNickname = '';
+
+        
+        // ==================== 应用初始化 ====================
+        
+        // 页面加载时初始化
+        async function initApp() {
+            // 尝试从 Supabase 恢复登录状态
+            const hasSession = await initUserData();
+            
+            if (hasSession) {
+                // 有已保存的会话，隐藏登录页，恢复UI
+                document.getElementById('login-page').style.display = 'none';
+                updateLoggedInUI();
+                updateGuestUI();
+                console.log('已恢复会话:', userName);
+            } else {
+                // 没有会话，保持游客模式（登录页默认显示）
+                updateGuestUI();
+            }
+
             // 从 Supabase 加载帖子数据
             await loadPostsFromDB();
             // 从 Supabase 加载树洞数据
@@ -6203,10 +7472,10 @@
 
         // 初始化首页模块
         function initHomeModules() {
-            try { initGoldenQuote(); } catch(e) { console.error('initGoldenQuote failed:', e); }
-            try { initTodayTopic(); } catch(e) { console.error('initTodayTopic failed:', e); }
-            try { renderInterestCircles(); } catch(e) { console.error('renderInterestCircles failed:', e); }
-            try { updateHomeUserInfo(); } catch(e) { console.error('updateHomeUserInfo failed:', e); }
+            try { initGoldenQuote(); } catch(e) { console.error('[initGoldenQuote] error:', e); }
+            try { initTodayTopic(); } catch(e) { console.error('[initTodayTopic] error:', e); }
+            try { renderInterestCircles(); } catch(e) { console.error('[renderInterestCircles] error:', e); }
+            try { updateHomeUserInfo(); } catch(e) { console.error('[updateHomeUserInfo] error:', e); }
         }
 
         // 金句卡片关闭功能
@@ -6236,33 +7505,6 @@
             // 检查是否之前关闭过
             if (quoteCard && localStorage.getItem('goldenQuoteClosed') === 'true') {
                 quoteCard.classList.add('hidden');
-            }
-        }
-
-        // 初始化今日话题
-        function initTodayTopic() {
-            const today = new Date();
-            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-            const topicIndex = dayOfYear % todayTopics.length;
-            
-            const todayTopicEl = document.getElementById('today-topic-question');
-            const topicDateEl = document.getElementById('topic-date');
-            
-            if (todayTopicEl) todayTopicEl.textContent = todayTopics[topicIndex];
-            if (topicDateEl) topicDateEl.textContent = `${today.getMonth() + 1}月${today.getDate()}日`;
-            // 渲染已有的回答
-            renderTopicAnswers();
-        }
-
-        // 初始化话题字数统计
-        function initTopicCharCount() {
-            const topicInput = document.getElementById('topic-answer');
-            const charCountEl = document.getElementById('topic-char-count');
-            
-            if (topicInput && charCountEl) {
-                topicInput.addEventListener('input', () => {
-                    charCountEl.textContent = topicInput.value.length;
-                });
             }
         }
 
