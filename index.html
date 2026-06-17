@@ -7535,6 +7535,13 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
+            // 优先渲染同道板块，确保不被其他错误阻断
+            try {
+                renderInterestCircles();
+            } catch(e) {
+                console.error('渲染同道板块失败:', e);
+            }
+            
             renderCategories();
             renderHotPosts();
             renderHotTopics();
@@ -7546,9 +7553,11 @@
             initDeepNight();
             checkMoodPrompt();
             // 新增首页模块初始化
-            initHomeModules();
-            // 直接渲染同道板块
-            renderInterestCircles();
+            try {
+                initHomeModules();
+            } catch(e) {
+                console.error('初始化首页模块失败:', e);
+            }
             initTopicCharCount();
         });
 
@@ -7737,8 +7746,13 @@
 
         // 渲染兴趣圈子（2列网格）
         function renderInterestCircles() {
+            console.log('renderInterestCircles called, categories count:', categories ? categories.length : 'undefined');
             const grid = document.getElementById('interest-circles-grid');
-            if (!grid) return;
+            if (!grid) {
+                console.error('interest-circles-grid not found');
+                return;
+            }
+            console.log('grid found, rendering', categories.length, 'cards');
             
             // 按帖子数量排序，获取TOP排名
             const sortedCategories = [...categories].sort((a, b) => b.posts - a.posts);
