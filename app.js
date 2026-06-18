@@ -17,7 +17,7 @@
         const CURRENT_USER_KEY = 'daohes_current_user';
 
         // 初始化：从 Supabase 恢复登录状态
-        async function initUserData() {
+        async async function initUserData() {
             const currentUser = localStorage.getItem(CURRENT_USER_KEY);
             
             if (currentUser) {
