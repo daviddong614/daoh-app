@@ -1846,6 +1846,28 @@
             }
         }
 
+        // 初始化今日话题
+        function initTodayTopic() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+            const topicIndex = dayOfYear % todayTopics.length;
+            const topic = todayTopics[topicIndex];
+            
+            const topicEl = document.getElementById('today-topic-question');
+            const dateEl = document.getElementById('topic-date');
+            
+            if (topicEl) {
+                topicEl.textContent = topic;
+            } else {
+                console.error('[initTodayTopic] today-topic-question element not found');
+            }
+            
+            if (dateEl) {
+                const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+                dateEl.textContent = months[today.getMonth()] + today.getDate() + '日';
+            }
+        }
+
         // 提交话题回答
         // 获取今日话题当天的key
         function getTopicKey() {
