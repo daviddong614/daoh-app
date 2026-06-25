@@ -12,16 +12,23 @@
         const SUPABASE_URL = 'https://tsxrlwxleglqkfibddvl.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzeHJsd3hsZWdscWtmaWJkZHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDI1MzYsImV4cCI6MjA5NjU3ODUzNn0.7xz5qn8SmwkeOY67nEXUBFqQdAMPuOoby7S29eJBUKk';
         let sb = null;
-        try {
-            if (window.supabase) {
-                sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('[Supabase] 初始化成功');
-            } else {
-                console.warn('[Supabase] SDK未加载，使用本地数据模式');
-            }
-        } catch(e) {
-            console.warn('[Supabase] 初始化失败，使用本地数据模式:', e.message);
-        }
+        // 动态异步加载 Supabase SDK（不阻塞页面渲染和其他功能）
+        (function loadSupabaseAsync() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.onload = function() {
+                try {
+                    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('[Supabase] 初始化成功');
+                } catch(e) {
+                    console.warn('[Supabase] 客户端创建失败:', e.message);
+                }
+            };
+            script.onerror = function() {
+                console.warn('[Supabase] SDK加载失败，使用本地数据模式');
+            };
+            document.head.appendChild(script);
+        })();
 
         // localStorage 兼容：仍用 localStorage 缓存当前登录用户昵称
         const CURRENT_USER_KEY = 'daohes_current_user';
