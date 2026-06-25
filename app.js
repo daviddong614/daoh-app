@@ -243,15 +243,13 @@
             await loadTreeholePostsFromDB();
         }
 
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            initApp();
-        });
+        // [initApp 已整合到第二个 DOMContentLoaded 中]
 
         // ==================== Supabase 数据加载 ====================
         
         // 从 Supabase 加载帖子数据，替换硬编码
         async function loadPostsFromDB() {
+            if (!sb) { console.warn('[loadPostsFromDB] Supabase不可用，使用本地数据'); return; }
             try {
                 const { data, error } = await sb
                     .from('posts')
@@ -318,6 +316,7 @@
 
         // 加载帖子评论（帖子详情页用）
         async function loadCommentsFromDB(postId) {
+            if (!sb) return [];
             const { data, error } = await sb
                 .from('comments')
                 .select('*')
@@ -356,6 +355,7 @@
 
         // 从 Supabase 加载树洞数据
         async function loadTreeholeFromDB() {
+            if (!sb) return [];
             const { data, error } = await sb
                 .from('treehole_posts')
                 .select('*')
@@ -633,16 +633,7 @@
             updateGuestUI();
         }
 
-        // 处理认证按钮点击
-        function handleVerifyClick() {
-            if (isLoggedIn && !isGuest) {
-                // 已登录，跳转到个人角落
-                showPage('profile');
-            } else {
-                // 未登录或游客，打开登录页
-                document.getElementById('login-page').style.display = 'flex';
-            }
-        }
+        // [已废弃] handleVerifyClick 在后面有最终定义
 
         // 检查登录状态，如果未登录则提示
         function requireLogin() {
@@ -685,7 +676,7 @@
             const nickname = document.getElementById('profile-nickname').value.trim();
             const birthYear = document.getElementById('profile-birthyear').value;
             const province = document.getElementById('profile-province').value;
-            const bio = document.getElementById('profile-bio') ? document.getElementById('profile-bio').value : '';
+            const bio = document.getElementById('profile-intro') ? document.getElementById('profile-intro').value : '';
             const covenantChecked = document.getElementById('covenant-agree') ? document.getElementById('covenant-agree').checked : false;
             
             console.log('completeProfile called', {nickname, birthYear, province, bio, covenantChecked});
@@ -871,7 +862,7 @@
             const container = document.getElementById('hot-posts');
             const allPosts = Object.values(posts).flat().sort((a, b) => b.likes - a.likes).slice(0, 5);
             container.innerHTML = allPosts.map(post => `
-                <div class="post-card" onclick="showPost('${post.id}', '${getCategoryByPostId(post.id)}')">
+                <div class="post-card" onclick="showPost('${post.id}', '')">
                     <div class="post-header">
                         <div class="post-avatar">${post.avatar}</div>
                         <div class="post-meta">
@@ -902,7 +893,7 @@
                     })() : ''}
                     <div class="post-footer">
                         <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
-                        <div class="post-action" onclick="toggleTreeholeComments('${post.id}')" style="cursor:pointer"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
+                        <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments} 评论</div>
                         <div class="post-action"><span class="post-action-icon">👁️</span> ${Math.floor(post.likes * 10)}</div>
                     </div>
                 </div>
@@ -995,7 +986,8 @@
             `).join('');
         }
 
-        function renderTreeholePreview() {
+        // 首页树洞预览已改为入口卡片，此函数保留为空占位
+        function renderTreeholePreview_placeholder() {
             // 首页不需要预览了，已改为入口卡片
         }
 
@@ -1040,8 +1032,8 @@
             `).join('');
         }
 
-        function isWarmed(id) { return warmedPosts.has(id); }
-        function isHugged(id) { return huggedPosts.has(id); }
+        function isWarmed(id) { return warmedPosts.has(String(id)) || warmedPosts.has(id); }
+        function isHugged(id) { return huggedPosts.has(String(id)) || huggedPosts.has(id); }
 
         function toggleWarm(btn, id) {
             if (!isLoggedIn) { alert('登录后才能暖一下'); return; }
@@ -1266,7 +1258,7 @@
                             })() : ''}
                             <div class="post-footer">
                                 <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
-                                <div class="post-action" onclick="toggleTreeholeComments('${post.id}')" style="cursor:pointer"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
+                                <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments} 评论</div>
                             </div>
                         </div>
                     `).join('') : '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">这里还安静，你来写第一笔</div></div>'}
@@ -1276,7 +1268,11 @@
             showPage('category');
         }
 
-        function getCategoryByPostId(postId) {
+        function getCategoryByPostId(postId, preferredCat) {
+            // 优先检查指定板块（避免跨板块ID重复匹配错误）
+            if (preferredCat && posts[preferredCat]) {
+                if (posts[preferredCat].find(p => p.id == postId)) return preferredCat;
+            }
             for (const [catId, catPosts] of Object.entries(posts)) {
                 if (catPosts.find(p => p.id == postId)) return catId;
             }
@@ -1284,9 +1280,18 @@
         }
 
         function showPost(postId, catId) {
-            const catPosts = posts[catId] || [];
-            const post = catPosts.find(p => p.id == postId);
-            if (post) showPostDetail(postId, catId);
+            // 先尝试指定板块，否则遍历所有板块找帖子
+            if (catId) {
+                const catPosts = posts[catId] || [];
+                const post = catPosts.find(p => p.id == postId);
+                if (post) { showPostDetail(postId, catId); return; }
+            }
+            // 未指定板块或指定板块没找到，遍历所有板块
+            for (const [cid, catPosts] of Object.entries(posts)) {
+                const post = catPosts.find(p => String(p.id) === String(postId));
+                if (post) { showPostDetail(postId, cid); return; }
+            }
+            showToast('帖子不存在');
         }
 
         async function showPostDetail(postId, catId) {
@@ -1294,25 +1299,27 @@
             const post = catPosts.find(p => p.id == postId);
             if (!post) return;
 
-            // 从 Supabase 加载评论
+            // 从 Supabase 加载评论（sb 不可用时跳过）
             let comments = [];
-            try {
-                const { data, error } = await sb
-                    .from('comments')
-                    .select('*')
-                    .eq('post_id', postId)
-                    .order('created_at', { ascending: true });
-                if (!error && data) {
-                    comments = data.map(c => ({
-                        author: c.author_nickname || '匿名',
-                        avatar: c.author_avatar || '👤',
-                        text: c.content,
-                        time: formatTimeAgo(c.created_at),
-                        images: c.images || []
-                    }));
+            if (sb) {
+                try {
+                    const { data, error } = await sb
+                        .from('comments')
+                        .select('*')
+                        .eq('post_id', postId)
+                        .order('created_at', { ascending: true });
+                    if (!error && data) {
+                        comments = data.map(c => ({
+                            author: c.author_nickname || '匿名',
+                            avatar: c.author_avatar || '👤',
+                            text: c.content,
+                            time: formatTimeAgo(c.created_at),
+                            images: c.images || []
+                        }));
+                    }
+                } catch(e) {
+                    console.error('加载评论失败:', e);
                 }
-            } catch(e) {
-                console.error('加载评论失败:', e);
             }
 
             document.getElementById('post-detail').innerHTML = `
@@ -1486,6 +1493,7 @@
                 return;
             }
             
+            if (!sb) { showToast('网络异常，请稍后重试'); return; }
             try {
                 // 写入 Supabase
                 const { data, error } = await sb.from('treehole_posts').insert([{
@@ -1583,6 +1591,7 @@
                 return;
             }
 
+            if (!sb) { showToast('网络异常，请稍后重试'); return; }
             try {
                 // 写入 Supabase
                 const { data, error } = await sb.from('posts').insert([{
@@ -1665,6 +1674,7 @@
                     return;
                 }
                 
+                if (!sb) { showToast('网络异常，请稍后重试'); return; }
                 try {
                     // 写入 Supabase
                     const { error } = await sb.from('comments').insert([{
@@ -1852,7 +1862,7 @@
             }
         }
 
-        // 初始化
+        // 统一初始化入口
         document.addEventListener('DOMContentLoaded', () => {
             // 每个模块独立 try-catch，一个崩不影响其他的
             try { renderInterestCircles(); } catch(e) { console.error('[renderInterestCircles] error:', e); }
@@ -1860,7 +1870,7 @@
             try { renderHotPosts(); } catch(e) { console.error('[renderHotPosts] error:', e); }
             try { renderHotTopics(); } catch(e) { console.error('[renderHotTopics] error:', e); }
             try { renderActiveUsers(); } catch(e) { console.error('[renderActiveUsers] error:', e); }
-            try { renderTreeholePreview(); } catch(e) { console.error('[renderTreeholePreview] error:', e); }
+            try { renderTreeholePreview_placeholder(); } catch(e) { console.error('[renderTreeholePreview] error:', e); }
             try { renderTreeholeFull(); } catch(e) { console.error('[renderTreeholeFull] error:', e); }
             try { renderDailyQuestion(); } catch(e) { console.error('[renderDailyQuestion] error:', e); }
             try { renderVeteranPreview(); } catch(e) { console.error('[renderVeteranPreview] error:', e); }
@@ -1869,6 +1879,13 @@
             // 首页模块初始化
             try { initHomeModules(); } catch(e) { console.error('[initHomeModules] error:', e); }
             try { initTopicCharCount(); } catch(e) { console.error('[initTopicCharCount] error:', e); }
+            
+            // 异步初始化：从 Supabase 恢复登录状态和数据
+            initApp().then(() => {
+                // 数据加载完成后重新渲染
+                try { renderHotPosts(); } catch(e) { console.error('[re-renderHotPosts] error:', e); }
+                try { renderTreeholeFull(); } catch(e) { console.error('[re-renderTreeholeFull] error:', e); }
+            });
         });
 
         // ==================== 首页模块化功能函数 ====================
@@ -2263,15 +2280,7 @@
             }
         }
 
-        // 举报文案修改
-        function submitReport() {
-            if (!selectedReportReason) {
-                showToast('选个原因吧');
-                return;
-            }
-            closeReportModal();
-            showToast('收到，我们会处理');
-        }
+        // [已废弃] submitReport 在后面有最终定义
 
         // ESC关闭弹窗
         document.addEventListener('keydown', (e) => {
