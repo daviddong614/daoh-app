@@ -1210,12 +1210,18 @@
         }
 
         function showCategory(catId) {
+            console.log('[showCategory] 被调用，catId:', catId);
             const category = categories.find(c => c.id === catId);
             if (!category) {
+                console.error('[showCategory] 找不到板块:', catId);
                 showToast('找不到该板块');
                 return;
             }
             const catPosts = posts[catId] || [];
+            console.log('[showCategory] 板块:', category.name, '帖子数:', catPosts.length);
+            if (catPosts.length > 0) {
+                console.log('[showCategory] 第一条帖子:', catPosts[0].title?.substring(0, 30));
+            }
             
             document.getElementById('category-detail').innerHTML = `
                 <div class="back-btn" onclick="showPage('home')">
