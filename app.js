@@ -339,7 +339,13 @@
 
         // 检查当前用户是否已点赞某帖
         async function checkUserLiked(postId) {
-            if (!isLoggedIn || isGuest || !sb) return false;
+            if (!isLoggedIn || isGuest) return false;
+            // Supabase 不可用时检查 localStorage
+            if (!sb) {
+                const likeKey = 'daoh_likes_' + userName;
+                const likes = JSON.parse(localStorage.getItem(likeKey) || '{}');
+                return !!likes[postId];
+            }
             const { data } = await sb.from('likes')
                 .select('id')
                 .eq('user_nickname', userName)
@@ -1721,6 +1727,26 @@
                 return;
             }
 
+            // Supabase 不可用时，用 localStorage 兜底
+            if (!sb) {
+                const likeKey = 'daoh_likes_' + userName;
+                const likes = JSON.parse(localStorage.getItem(likeKey) || '{}');
+                const isLiked = el.classList.contains('liked');
+                const count = el.querySelector('span:last-child');
+                const current = parseInt(count.textContent) || 0;
+                if (isLiked) {
+                    delete likes[postId];
+                    el.classList.remove('liked');
+                    count.textContent = Math.max(0, current - 1);
+                } else {
+                    likes[postId] = true;
+                    el.classList.add('liked');
+                    count.textContent = current + 1;
+                }
+                localStorage.setItem(likeKey, JSON.stringify(likes));
+                return;
+            }
+
             try {
                 const isLiked = el.classList.contains('liked');
                 const count = el.querySelector('span:last-child');
@@ -1819,30 +1845,21 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            // 优先渲染同道板块，确保不被其他错误阻断
-            try {
-                renderInterestCircles();
-            } catch(e) {
-                console.error('渲染同道板块失败:', e);
-            }
-            
-            renderCategories();
-            renderHotPosts();
-            renderHotTopics();
-            renderActiveUsers();
-            renderTreeholePreview();
-            renderTreeholeFull();
-            renderDailyQuestion();
-            renderVeteranPreview();
-            initDeepNight();
-            checkMoodPrompt();
-            // 新增首页模块初始化
-            try {
-                initHomeModules();
-            } catch(e) {
-                console.error('初始化首页模块失败:', e);
-            }
-            initTopicCharCount();
+            // 每个模块独立 try-catch，一个崩不影响其他的
+            try { renderInterestCircles(); } catch(e) { console.error('[renderInterestCircles] error:', e); }
+            try { renderCategories(); } catch(e) { console.error('[renderCategories] error:', e); }
+            try { renderHotPosts(); } catch(e) { console.error('[renderHotPosts] error:', e); }
+            try { renderHotTopics(); } catch(e) { console.error('[renderHotTopics] error:', e); }
+            try { renderActiveUsers(); } catch(e) { console.error('[renderActiveUsers] error:', e); }
+            try { renderTreeholePreview(); } catch(e) { console.error('[renderTreeholePreview] error:', e); }
+            try { renderTreeholeFull(); } catch(e) { console.error('[renderTreeholeFull] error:', e); }
+            try { renderDailyQuestion(); } catch(e) { console.error('[renderDailyQuestion] error:', e); }
+            try { renderVeteranPreview(); } catch(e) { console.error('[renderVeteranPreview] error:', e); }
+            try { initDeepNight(); } catch(e) { console.error('[initDeepNight] error:', e); }
+            try { checkMoodPrompt(); } catch(e) { console.error('[checkMoodPrompt] error:', e); }
+            // 首页模块初始化
+            try { initHomeModules(); } catch(e) { console.error('[initHomeModules] error:', e); }
+            try { initTopicCharCount(); } catch(e) { console.error('[initTopicCharCount] error:', e); }
         });
 
         // ==================== 首页模块化功能函数 ====================
