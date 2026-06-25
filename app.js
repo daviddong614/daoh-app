@@ -948,14 +948,19 @@
                     return;
                 }
                 
-                // 调试信息
-                console.log('[openHotTopic] index:', index, 'topic:', topic.title, 'category:', topic.category);
+                console.log('[openHotTopic] 点击话题:', index, topic.title, '目标板块:', topic.category);
                 
-                // If there's a matching category, navigate to it
-                if (topic.category) {
+                // 直接跳转到对应板块
+                if (topic.category && posts[topic.category]) {
+                    console.log('[openHotTopic] 跳转到板块:', topic.category, '帖子数:', posts[topic.category].length);
                     showCategory(topic.category);
-                    // Show a toast about the topic
-                    showToast('进入「' + (topic.categoryLabel || '') + '」板块');
+                } else {
+                    console.warn('[openHotTopic] 板块不存在或无数据:', topic.category);
+                    showToast('该板块暂无内容');
+                }
+                
+                // 原代码的 else 分支（模态框）已废弃，直接删除
+                /*
                 } else {
                 // Show topic in a modal
                 const modal = document.createElement('div');
