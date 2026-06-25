@@ -908,15 +908,16 @@
         }
 
         function openHotTopic(index) {
-            const topic = hotTopics[index];
-            if (!topic) return;
-            
-            // If there's a matching category, navigate to it
-            if (topic.category) {
-                showCategory(topic.category);
-                // Show a toast about the topic
-                showToast('进入' + (topic.categoryLabel || '') + '板块');
-            } else {
+            try {
+                const topic = hotTopics[index];
+                if (!topic) return;
+                
+                // If there's a matching category, navigate to it
+                if (topic.category) {
+                    showCategory(topic.category);
+                    // Show a toast about the topic
+                    showToast('进入' + (topic.categoryLabel || '') + '板块');
+                } else {
                 // Show topic in a modal
                 const modal = document.createElement('div');
                 modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
@@ -939,6 +940,10 @@
                 `;
                 
                 document.body.appendChild(modal);
+                }
+            } catch(e) {
+                console.error('openHotTopic error:', e);
+                showToast('出错了：' + e.message);
             }
         }
 
@@ -1157,6 +1162,10 @@
 
         function showCategory(catId) {
             const category = categories.find(c => c.id === catId);
+            if (!category) {
+                showToast('找不到该板块');
+                return;
+            }
             const catPosts = posts[catId] || [];
             
             document.getElementById('category-detail').innerHTML = `
