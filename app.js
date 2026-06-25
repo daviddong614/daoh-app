@@ -11,13 +11,24 @@
         // ==================== Supabase 初始化 ====================
         const SUPABASE_URL = 'https://tsxrlwxleglqkfibddvl.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzeHJsd3hsZWdscWtmaWJkZHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDI1MzYsImV4cCI6MjA5NjU3ODUzNn0.7xz5qn8SmwkeOY67nEXUBFqQdAMPuOoby7S29eJBUKk';
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let sb = null;
+        try {
+            if (window.supabase) {
+                sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('[Supabase] 初始化成功');
+            } else {
+                console.warn('[Supabase] SDK未加载，使用本地数据模式');
+            }
+        } catch(e) {
+            console.warn('[Supabase] 初始化失败，使用本地数据模式:', e.message);
+        }
 
         // localStorage 兼容：仍用 localStorage 缓存当前登录用户昵称
         const CURRENT_USER_KEY = 'daohes_current_user';
 
         // 初始化：从 Supabase 恢复登录状态
         async function initUserData() {
+            if (!sb) { console.warn('[initUserData] Supabase不可用，跳过'); return; }
             const currentUser = localStorage.getItem(CURRENT_USER_KEY);
             
             if (currentUser) {
@@ -39,6 +50,7 @@
 
         // 注册新用户（写入 Supabase）
         async function registerUser(nickname, password) {
+            if (!sb) { console.warn('Supabase不可用'); return null; }
             const { data, error } = await sb.from('users').insert([{
                 nickname: nickname,
                 password_hash: password,
@@ -58,6 +70,7 @@
 
         // 验证用户登录（查询 Supabase）
         async function verifyUser(nickname, password) {
+            if (!sb) { showToast('网络异常，请稍后重试'); return false; }
             const { data, error } = await sb.from('users').select('*').eq('nickname', nickname).eq('password_hash', password).single();
             if (data) {
                 localStorage.setItem(CURRENT_USER_KEY, nickname);
@@ -68,6 +81,7 @@
 
         // 检查昵称是否已存在
         async function checkNicknameExists(nickname) {
+            if (!sb) return false;
             const { data, error } = await sb.from('users').select('nickname').eq('nickname', nickname).single();
             return !!data;
         }
@@ -77,6 +91,7 @@
             const currentUser = localStorage.getItem(CURRENT_USER_KEY);
             if (!currentUser) return false;
             
+            if (!sb) return false;
             const { error } = await sb.from('users').update(data).eq('nickname', currentUser);
             return !error;
         }
@@ -86,6 +101,7 @@
             const currentUser = localStorage.getItem(CURRENT_USER_KEY);
             if (!currentUser) return null;
             
+            if (!sb) return null;
             const { data, error } = await sb.from('users').select('*').eq('nickname', currentUser).single();
             return data || null;
         }
@@ -316,7 +332,7 @@
 
         // 检查当前用户是否已点赞某帖
         async function checkUserLiked(postId) {
-            if (!isLoggedIn || isGuest) return false;
+            if (!isLoggedIn || isGuest || !sb) return false;
             const { data } = await sb.from('likes')
                 .select('id')
                 .eq('user_nickname', userName)
@@ -382,7 +398,7 @@
 
         // 心情记录写入 Supabase
         async function saveMoodToDB(mood, note) {
-            if (!isLoggedIn || isGuest) return false;
+            if (!isLoggedIn || isGuest || !sb) return false;
             const { error } = await sb.from('moods').insert([{
                 user_nickname: userName,
                 mood: mood,
@@ -1585,6 +1601,7 @@
             }
 
             // 写入 Supabase 树洞表
+            if (!sb) { showToast('网络异常，请稍后重试'); return; }
             const { data, error } = await sb.from('treehole_posts').insert([{
                 content: content.trim()
             }]).select().single();
