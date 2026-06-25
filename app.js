@@ -959,32 +959,6 @@
                     showToast('该板块暂无内容');
                 }
                 
-                // 原代码的 else 分支（模态框）已废弃，直接删除
-                /*
-                } else {
-                // Show topic in a modal
-                const modal = document.createElement('div');
-                modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
-                modal.onclick = function(e) { if(e.target === modal) document.body.removeChild(modal); };
-                
-                modal.innerHTML = `
-                    <div style="background:#1a1a1f;border-radius:16px;padding:24px;max-width:400px;width:90%;position:relative;">
-                        <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#999;font-size:24px;cursor:pointer;">×</button>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-                            <span style="background:#e74c3c;color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;">热</span>
-                            <span style="color:#888;font-size:13px;">${topic.views} 阅读</span>
-                        </div>
-                        <h3 style="color:#fff;font-size:18px;margin:0 0 16px 0;line-height:1.4;">${topic.title}</h3>
-                        <div style="background:#2a2a30;border-radius:8px;padding:16px;margin-bottom:16px;">
-                            <div style="color:#888;font-size:13px;margin-bottom:8px;">💬 ${topic.comments} 条讨论</div>
-                            <div style="color:#ccc;font-size:14px;line-height:1.6;">这个话题正在热烈讨论中，快来分享你的看法吧！</div>
-                        </div>
-                        <button onclick="document.body.removeChild(this.parentElement.parentElement); openPostModal();" style="width:100%;padding:12px;background:linear-gradient(135deg,#5b7fc7,#4a6ba5);color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">参与讨论</button>
-                    </div>
-                `;
-                
-                document.body.appendChild(modal);
-                }
             } catch(e) {
                 console.error('openHotTopic error:', e);
                 showToast('出错了：' + e.message);
