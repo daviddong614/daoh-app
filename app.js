@@ -933,13 +933,19 @@
         function openHotTopic(index) {
             try {
                 const topic = hotTopics[index];
-                if (!topic) return;
+                if (!topic) {
+                    showToast('话题不存在，index=' + index);
+                    return;
+                }
+                
+                // 调试信息
+                console.log('[openHotTopic] index:', index, 'topic:', topic.title, 'category:', topic.category);
                 
                 // If there's a matching category, navigate to it
                 if (topic.category) {
                     showCategory(topic.category);
                     // Show a toast about the topic
-                    showToast('进入' + (topic.categoryLabel || '') + '板块');
+                    showToast('进入「' + (topic.categoryLabel || '') + '」板块');
                 } else {
                 // Show topic in a modal
                 const modal = document.createElement('div');
