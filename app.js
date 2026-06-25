@@ -1016,7 +1016,7 @@
             }
             
             container.innerHTML = filteredPosts.map(post => `
-                <div class="treehole-card" data-id="${post.id}" data-author="${post.author}">
+                <div class="treehole-card" data-id="${post.id}" data-author="${post.author}" onclick="handleTreeholeCardClick(event, '${post.id}')">
                     <div class="treehole-anonymous">
                         <div class="anonymous-avatar">👤</div>
                         <span class="anonymous-tag">${post.author}</span>
@@ -1026,14 +1026,14 @@
                     ${post.unverified ? '<div class="audit-warning" style="margin-bottom: 10px;">⚠️ 该内容未经证实，请理性看待</div>' : ''}
                     ${post.disclaimer ? '<div class="disclaimer-badge">⚠️ 以上内容仅为个人观点，不构成专业建议</div>' : ''}
                     <p class="treehole-content">${post.content}</p>
-                    <div class="treehole-footer">
+                    <div class="treehole-footer" onclick="event.stopPropagation()">
                         <button class="treehole-warm-btn ${isWarmed(post.id) ? 'active' : ''}" onclick="toggleWarm(this, '${post.id}')">
                             <span>🔥</span> <span>${post.warms}</span>
                         </button>
                         <button class="treehole-hug-btn ${isHugged(post.id) ? 'active' : ''}" onclick="toggleHug(this, '${post.id}')">
                             <span>🤗</span> <span>${post.hugs}</span>
                         </button>
-                        <div class="post-action" onclick="toggleTreeholeComments('${post.id}')" style="cursor:pointer"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
+                        <div class="post-action" onclick="toggleTreeholeComments('${post.id}')"><span class="post-action-icon">💬</span> <span class="th-comment-count">${post.comments}</span></div>
                         <button class="report-btn" onclick="openReportModal('treehole', '${post.id}')">不妥</button>
                     </div>
                 </div>
@@ -1139,6 +1139,15 @@
                 const input = document.getElementById(`th-input-${postId}`);
                 if (input) input.focus();
             }, 100);
+        }
+
+        // 点击树洞卡片内容区域展开评论
+        function handleTreeholeCardClick(event, postId) {
+            // 如果点击的是按钮或输入框等交互元素，不触发
+            if (event.target.closest('button') || event.target.closest('input') || event.target.closest('.treehole-footer') || event.target.closest('.treehole-comment-section')) {
+                return;
+            }
+            toggleTreeholeComments(postId);
         }
 
         function submitTreeholeComment(postId) {
