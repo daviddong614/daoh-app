@@ -1512,6 +1512,13 @@
             border-radius: 12px;
             padding: 20px;
             position: relative;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .treehole-card:hover {
+            background: rgba(30, 30, 36, 0.8);
+            border-color: rgba(139, 113, 79, 0.4);
         }
 
         .treehole-anonymous {
