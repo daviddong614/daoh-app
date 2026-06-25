@@ -277,9 +277,16 @@
                         }
                     }
 
+                    console.log('[loadPostsFromDB] 开始填充数据，共', data.length, '条帖子');
                     data.forEach(post => {
                         const cat = categoryMap[post.category] || post.category;
-                        if (!posts[cat]) posts[cat] = [];
+                        if (!cat || !posts.hasOwnProperty(cat)) {
+                            console.warn('[loadPostsFromDB] 帖子分类无效:', post.category, '->', cat, '帖子ID:', post.id);
+                            return; // 跳过无效分类的帖子
+                        }
+                        if (posts[cat].length === 0) {
+                            console.log('[loadPostsFromDB] 帖子ID:', post.id, '分类:', cat, '标题:', (post.title || '').substring(0, 30));
+                        }
                         posts[cat].push({
                             id: post.id,
                             author: post.author_nickname,
@@ -294,6 +301,12 @@
                             _dbId: post.id  // 保留数据库ID用于后续操作
                         });
                     });
+                    
+                    // 统计各板块帖子数量
+                    console.log('[loadPostsFromDB] 数据填充完成，各板块帖子数:');
+                    for (const [key, arr] of Object.entries(posts)) {
+                        if (arr.length > 0) console.log('  ', key, ':', arr.length, '条');
+                    }
                 }
             } catch (e) {
                 console.error('loadPostsFromDB 异常:', e);
