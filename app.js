@@ -948,24 +948,45 @@
                     return;
                 }
                 
-                console.log('[openHotTopic] 点击话题:', index, topic.title, '目标板块:', topic.category);
+                const targetCat = topic.category;
+                const catLabel = topic.categoryLabel || targetCat;
                 
-                // 诊断：显示帖子数据状态
-                const postStatus = Object.entries(posts).map(([k, v]) => k + ':' + v.length).join(', ');
-                console.log('[openHotTopic] 各板块帖子数:', postStatus);
+                console.log('[openHotTopic] ========== 开始 ==========');
+                console.log('[openHotTopic] 话题:', topic.title);
+                console.log('[openHotTopic] 目标板块ID:', targetCat);
+                console.log('[openHotTopic] 目标板块名:', catLabel);
                 
-                // 直接跳转到对应板块
-                if (topic.category && posts[topic.category]) {
-                    console.log('[openHotTopic] 跳转到板块:', topic.category, '帖子数:', posts[topic.category].length);
-                    showToast('进入「' + (topic.categoryLabel || topic.category) + '」板块，共' + posts[topic.category].length + '条帖子');
-                    showCategory(topic.category);
-                } else {
-                    console.warn('[openHotTopic] 板块不存在或无数据:', topic.category);
-                    showToast('该板块暂无内容');
+                // 验证板块是否存在
+                const categoryObj = categories.find(c => c.id === targetCat);
+                if (!categoryObj) {
+                    console.error('[openHotTopic] 板块不存在:', targetCat);
+                    showToast('板块「' + catLabel + '」不存在');
+                    return;
                 }
                 
+                // 验证板块帖子数据
+                const catPosts = posts[targetCat];
+                if (!catPosts) {
+                    console.error('[openHotTopic] 板块数据为空:', targetCat);
+                    showToast('板块「' + catLabel + '」数据未加载');
+                    return;
+                }
+                
+                console.log('[openHotTopic] 板块帖子数:', catPosts.length);
+                if (catPosts.length > 0) {
+                    console.log('[openHotTopic] 第一条帖子:', catPosts[0].title?.substring(0, 40));
+                    console.log('[openHotTopic] 第一条帖子ID:', catPosts[0].id);
+                }
+                
+                // 显示所有板块帖子数（诊断用）
+                const allCats = Object.entries(posts).map(([k, v]) => k + ':' + v.length).join(', ');
+                console.log('[openHotTopic] 所有板块:', allCats);
+                
+                showToast('进入「' + catLabel + '」板块，共' + catPosts.length + '条帖子');
+                showCategory(targetCat);
+                
             } catch(e) {
-                console.error('openHotTopic error:', e);
+                console.error('[openHotTopic] 异常:', e);
                 showToast('出错了：' + e.message);
             }
         }
@@ -1194,17 +1215,23 @@
         }
 
         function showCategory(catId) {
-            console.log('[showCategory] 被调用，catId:', catId);
+            console.log('[showCategory] ========== 开始 ==========');
+            console.log('[showCategory] 接收到的catId:', catId, '类型:', typeof catId);
+            
             const category = categories.find(c => c.id === catId);
             if (!category) {
                 console.error('[showCategory] 找不到板块:', catId);
                 showToast('找不到该板块');
                 return;
             }
+            console.log('[showCategory] 找到板块:', category.name);
+            
             const catPosts = posts[catId] || [];
-            console.log('[showCategory] 板块:', category.name, '帖子数:', catPosts.length);
+            console.log('[showCategory] 板块帖子数:', catPosts.length);
             if (catPosts.length > 0) {
-                console.log('[showCategory] 第一条帖子:', catPosts[0].title?.substring(0, 30));
+                console.log('[showCategory] 第一条帖子ID:', catPosts[0].id);
+                console.log('[showCategory] 第一条帖子标题:', catPosts[0].title?.substring(0, 40));
+                console.log('[showCategory] 第一条帖子作者:', catPosts[0].author);
             }
             
             document.getElementById('category-detail').innerHTML = `
