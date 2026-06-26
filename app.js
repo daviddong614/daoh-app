@@ -950,9 +950,14 @@
                 
                 console.log('[openHotTopic] 点击话题:', index, topic.title, '目标板块:', topic.category);
                 
+                // 诊断：显示帖子数据状态
+                const postStatus = Object.entries(posts).map(([k, v]) => k + ':' + v.length).join(', ');
+                console.log('[openHotTopic] 各板块帖子数:', postStatus);
+                
                 // 直接跳转到对应板块
                 if (topic.category && posts[topic.category]) {
                     console.log('[openHotTopic] 跳转到板块:', topic.category, '帖子数:', posts[topic.category].length);
+                    showToast('进入「' + (topic.categoryLabel || topic.category) + '」板块，共' + posts[topic.category].length + '条帖子');
                     showCategory(topic.category);
                 } else {
                     console.warn('[openHotTopic] 板块不存在或无数据:', topic.category);
