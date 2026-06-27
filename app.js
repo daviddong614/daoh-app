@@ -994,6 +994,7 @@
                 const catLabel = topic.categoryLabel || targetCat;
                 
                 console.log('[openHotTopic] ========== 开始 ==========');
+                console.log('[openHotTopic] 索引:', index);
                 console.log('[openHotTopic] 话题:', topic.title);
                 console.log('[openHotTopic] 目标板块ID:', targetCat);
                 console.log('[openHotTopic] 目标板块名:', catLabel);
@@ -1005,6 +1006,7 @@
                     showToast('板块「' + catLabel + '」不存在');
                     return;
                 }
+                console.log('[openHotTopic] 找到板块:', categoryObj.name, categoryObj.icon);
                 
                 // 验证板块帖子数据
                 const catPosts = posts[targetCat];
@@ -1016,16 +1018,64 @@
                 
                 console.log('[openHotTopic] 板块帖子数:', catPosts.length);
                 if (catPosts.length > 0) {
-                    console.log('[openHotTopic] 第一条帖子:', catPosts[0].title?.substring(0, 40));
                     console.log('[openHotTopic] 第一条帖子ID:', catPosts[0].id);
+                    console.log('[openHotTopic] 第一条帖子标题:', catPosts[0].title);
+                    console.log('[openHotTopic] 第一条帖子作者:', catPosts[0].author);
                 }
                 
                 // 显示所有板块帖子数（诊断用）
                 const allCats = Object.entries(posts).map(([k, v]) => k + ':' + v.length).join(', ');
-                console.log('[openHotTopic] 所有板块:', allCats);
+                console.log('[openHotTopic] 所有板块帖子数:', allCats);
+                
+                // 准备调用showCategory前再次确认
+                console.log('[openHotTopic] 即将调用showCategory, 参数:', targetCat);
                 
                 showToast('进入「' + catLabel + '」板块，共' + catPosts.length + '条帖子');
-                showCategory(targetCat);
+                
+                // 直接调用，不再通过showCategory
+                // 手动构建板块详情页
+                const category = categoryObj;
+                document.getElementById('category-detail').innerHTML = `
+                    <div class="back-btn" onclick="showPage('home')">
+                        <span>←</span> 返回首页
+                    </div>
+                    <div class="category-header">
+                        <div class="category-header-icon">${category.icon}</div>
+                        <div class="category-header-info">
+                            <h1>${category.name}</h1>
+                            <p>${category.desc}</p>
+                        </div>
+                        <div class="category-header-stats">
+                            <div class="category-stat">
+                                <div class="category-stat-value">${category.posts.toLocaleString()}</div>
+                                <div class="category-stat-label">帖子</div>
+                            </div>
+                            <div class="category-stat">
+                                <div class="category-stat-value">${Math.floor(category.posts * 0.8).toLocaleString()}</div>
+                                <div class="category-stat-label">互动</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-list">
+                        ${catPosts.length ? catPosts.map(post => `
+                            <div class="post-card" onclick="showPostDetail('${post.id}', '${targetCat}')">
+                                <div class="post-header">
+                                    <div class="post-avatar">${post.avatar}</div>
+                                    <div class="post-meta">
+                                        <div class="post-author">${post.author}</div>
+                                        <div class="post-time">${post.time}</div>
+                                    </div>
+                                    <span class="post-tag">${post.tag}</span>
+                                </div>
+                                <h3 class="post-title">${post.title}</h3>
+                                <p class="post-excerpt">${post.content}</p>
+                            </div>
+                        `).join('') : '<div class="empty-state">暂无帖子</div>'}
+                    </div>
+                `;
+                
+                showPage('category-detail');
+                console.log('[openHotTopic] 页面已切换到:', targetCat);
                 
             } catch(e) {
                 console.error('[openHotTopic] 异常:', e);
