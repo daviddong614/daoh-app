@@ -2642,7 +2642,7 @@
             padding: 12px 24px;
             font-size: 14px;
             color: #1a1a1a;
-            z-index: 3000;
+            z-index: 10000;
             opacity: 0;
             transition: all 0.3s;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);

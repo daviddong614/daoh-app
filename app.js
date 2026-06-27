@@ -13,6 +13,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzeHJsd3hsZWdscWtmaWJkZHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDI1MzYsImV4cCI6MjA5NjU3ODUzNn0.7xz5qn8SmwkeOY67nEXUBFqQdAMPuOoby7S29eJBUKk';
         let sb = null;
         // 动态异步加载 Supabase SDK（不阻塞页面渲染和其他功能）
+        let sbLoadAttempts = 0;
         (function loadSupabaseAsync() {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
@@ -25,7 +26,22 @@
                 }
             };
             script.onerror = function() {
-                console.warn('[Supabase] SDK加载失败，使用本地数据模式');
+                sbLoadAttempts++;
+                console.warn('[Supabase] SDK加载失败，尝试备用CDN（第' + sbLoadAttempts + '次）');
+                if (sbLoadAttempts <= 2) {
+                    // 尝试备用CDN
+                    const fallbacks = [
+                        'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js',
+                        'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+                    ];
+                    const retryScript = document.createElement('script');
+                    retryScript.src = fallbacks[sbLoadAttempts - 1];
+                    retryScript.onload = script.onload;
+                    retryScript.onerror = script.onerror;
+                    document.head.appendChild(retryScript);
+                } else {
+                    console.warn('[Supabase] 所有CDN均加载失败，使用本地数据模式');
+                }
             };
             document.head.appendChild(script);
         })();
@@ -135,6 +151,7 @@
         async function handleLoginOrRegister() {
             const nickname = document.getElementById('login-nickname').value.trim();
             const password = document.getElementById('login-password').value;
+            const loginBtn = document.querySelector('.login-btn');
             
             if (!nickname) {
                 showToast('请输入昵称');
@@ -151,51 +168,68 @@
                 return;
             }
             
-            const exists = await checkNicknameExists(nickname);
+            // 显示加载状态
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.textContent = '连接中...';
+            }
             
-            if (exists) {
-                // 用户已存在，验证密码
-                const valid = await verifyUser(nickname, password);
-                if (valid) {
-                    // 登录成功
-                    const userData = await getCurrentUserData();
+            try {
+                const exists = await checkNicknameExists(nickname);
+                
+                if (exists) {
+                    // 用户已存在，验证密码
+                    const valid = await verifyUser(nickname, password);
+                    if (valid) {
+                        // 登录成功
+                        const userData = await getCurrentUserData();
+                        userName = nickname;
+                        userAvatar = userData?.avatar || '👨';
+                        selectedHobbies = userData?.hobbies || [];
+                        isLoggedIn = true;
+                        isGuest = false;
+                        
+                        document.getElementById('login-page').style.display = 'none';
+                        updateLoggedInUI();
+                        updateGuestUI();
+                        showToast(`欢迎回来，${userName}！`);
+                    } else {
+                        showToast('密码错误，请重试');
+                    }
+                } else {
+                    // 新用户，自动注册
+                    const newUser = await registerUser(nickname, password);
+                    if (!newUser) {
+                        showToast('网络异常，请检查网络后重试');
+                        return;
+                    }
                     userName = nickname;
-                    userAvatar = userData?.avatar || '👨';
-                    selectedHobbies = userData?.hobbies || [];
+                    userAvatar = newUser.avatar || '👨';
+                    selectedHobbies = newUser.hobbies || [];
                     isLoggedIn = true;
                     isGuest = false;
                     
                     document.getElementById('login-page').style.display = 'none';
                     updateLoggedInUI();
                     updateGuestUI();
-                    showToast(`欢迎回来，${userName}！`);
-                } else {
-                    showToast('密码错误');
+                    showToast(`注册成功，欢迎，${userName}！`);
+                    
+                    // 首次注册后弹出完善信息弹窗
+                    setTimeout(() => {
+                        document.getElementById('profile-modal').classList.add('active');
+                        document.getElementById('profile-nickname').value = nickname;
+                        document.getElementById('profile-nickname').readOnly = true;
+                    }, 500);
                 }
-            } else {
-                // 新用户，自动注册
-                const newUser = await registerUser(nickname, password);
-                if (!newUser) {
-                    showToast('注册失败，请重试');
-                    return;
+            } catch(e) {
+                console.error('[handleLoginOrRegister] 错误:', e);
+                showToast('网络异常，请检查网络后重试');
+            } finally {
+                // 恢复按钮状态
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = '进入道合';
                 }
-                userName = nickname;
-                userAvatar = newUser.avatar || '👨';
-                selectedHobbies = newUser.hobbies || [];
-                isLoggedIn = true;
-                isGuest = false;
-                
-                document.getElementById('login-page').style.display = 'none';
-                updateLoggedInUI();
-                updateGuestUI();
-                showToast(`注册成功，欢迎，${userName}！`);
-                
-                // 首次注册后弹出完善信息弹窗
-                setTimeout(() => {
-                    document.getElementById('profile-modal').classList.add('active');
-                    document.getElementById('profile-nickname').value = nickname;
-                    document.getElementById('profile-nickname').readOnly = true;
-                }, 500);
             }
         }
 
@@ -640,10 +674,18 @@
 
         // 游客入口
         function enterAsGuest() {
-            isGuest = true;
-            document.getElementById('login-page').style.display = 'none';
-            showToast('您已进入游客模式，可浏览但无法互动');
-            updateGuestUI();
+            try {
+                isGuest = true;
+                const loginPage = document.getElementById('login-page');
+                if (loginPage) loginPage.style.display = 'none';
+                updateGuestUI();
+                showToast('您已进入游客模式，可浏览但无法互动');
+            } catch(e) {
+                console.error('[enterAsGuest] 错误:', e);
+                // 即使出错也强制隐藏登录页
+                const lp = document.getElementById('login-page');
+                if (lp) lp.style.display = 'none';
+            }
         }
 
         // [已废弃] handleVerifyClick 在后面有最终定义
@@ -1915,6 +1957,8 @@
                 // 数据加载完成后重新渲染
                 try { renderHotPosts(); } catch(e) { console.error('[re-renderHotPosts] error:', e); }
                 try { renderTreeholeFull(); } catch(e) { console.error('[re-renderTreeholeFull] error:', e); }
+            }).catch(e => {
+                console.error('[initApp] 初始化失败:', e);
             });
         });
 
