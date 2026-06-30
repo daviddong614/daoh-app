@@ -986,56 +986,68 @@
             try {
                 const topic = hotTopics[index];
                 if (!topic) {
-                    showToast('话题不存在，index=' + index);
+                    showToast('话题不存在');
                     return;
                 }
                 
                 const targetCat = topic.category;
                 const catLabel = topic.categoryLabel || targetCat;
                 
-                console.log('[openHotTopic] ========== 开始 ==========');
-                console.log('[openHotTopic] 索引:', index);
-                console.log('[openHotTopic] 话题:', topic.title);
-                console.log('[openHotTopic] 目标板块ID:', targetCat, '类型:', typeof targetCat);
-                console.log('[openHotTopic] 目标板块名:', catLabel);
-                console.log('[openHotTopic] hotTopics数组:', JSON.stringify(hotTopics.map(t => ({title: t.title.substring(0, 20), category: t.category}))));
+                console.log('[openHotTopic] 点击话题:', topic.title, '目标板块:', targetCat);
                 
-                // 验证板块是否存在
+                // 验证板块
                 const categoryObj = categories.find(c => c.id === targetCat);
                 if (!categoryObj) {
-                    console.error('[openHotTopic] 板块不存在:', targetCat);
-                    showToast('板块「' + catLabel + '」不存在');
-                    return;
-                }
-                console.log('[openHotTopic] 找到板块:', categoryObj.name, categoryObj.icon);
-                
-                // 验证板块帖子数据
-                const catPosts = posts[targetCat];
-                if (!catPosts) {
-                    console.error('[openHotTopic] 板块数据为空:', targetCat);
-                    showToast('板块「' + catLabel + '」数据未加载');
+                    showToast('板块不存在');
                     return;
                 }
                 
-                console.log('[openHotTopic] 板块帖子数:', catPosts.length);
-                if (catPosts.length > 0) {
-                    console.log('[openHotTopic] 第一条帖子ID:', catPosts[0].id);
-                    console.log('[openHotTopic] 第一条帖子标题:', catPosts[0].title);
-                    console.log('[openHotTopic] 第一条帖子作者:', catPosts[0].author);
-                }
+                const catPosts = posts[targetCat] || [];
                 
-                // 显示所有板块帖子数（诊断用）
-                const allCats = Object.entries(posts).map(([k, v]) => k + ':' + v.length).join(', ');
-                console.log('[openHotTopic] 所有板块帖子数:', allCats);
+                // 直接构建板块详情页，不依赖 showCategory
+                const category = categoryObj;
+                document.getElementById('category-detail').innerHTML = `
+                    <div class="back-btn" onclick="showPage('home')">
+                        <span>←</span> 返回首页
+                    </div>
+                    <div class="category-header">
+                        <div class="category-header-icon">${category.icon}</div>
+                        <div class="category-header-info">
+                            <h1>${category.name}</h1>
+                            <p>${category.desc}</p>
+                        </div>
+                        <div class="category-header-stats">
+                            <div class="category-stat">
+                                <div class="category-stat-value">${category.posts.toLocaleString()}</div>
+                                <div class="category-stat-label">帖子</div>
+                            </div>
+                            <div class="category-stat">
+                                <div class="category-stat-value">${Math.floor(category.posts * 0.8).toLocaleString()}</div>
+                                <div class="category-stat-label">互动</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-list">
+                        ${catPosts.length ? catPosts.map(post => `
+                            <div class="post-card" onclick="showPostDetail('${post.id}', '${targetCat}')">
+                                <div class="post-header">
+                                    <div class="post-avatar">${post.avatar}</div>
+                                    <div class="post-meta">
+                                        <div class="post-author">${post.author}</div>
+                                        <div class="post-time">${post.time}</div>
+                                    </div>
+                                    <span class="post-tag">${post.tag}</span>
+                                </div>
+                                <h3 class="post-title">${post.title}</h3>
+                                <p class="post-excerpt">${post.content}</p>
+                            </div>
+                        `).join('') : '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">这里还安静，你来写第一笔</div></div>'}
+                    </div>
+                `;
                 
-                // 准备调用showCategory前再次确认
-                console.log('[openHotTopic] 即将调用showCategory, 参数:', targetCat);
-                
-                showToast('进入「' + catLabel + '」板块，共' + catPosts.length + '条帖子');
-                
-                // 调用showCategory显示板块
-                showCategory(targetCat);
-                console.log('[openHotTopic] 已调用showCategory, 参数:', targetCat);
+                showPage('category');
+                showToast(`进入「${catLabel}」板块`);
+                console.log('[openHotTopic] 已跳转到', targetCat, '帖子数:', catPosts.length);
                 
             } catch(e) {
                 console.error('[openHotTopic] 异常:', e);
