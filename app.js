@@ -1,4 +1,5 @@
 
+        console.log('[道合] 版本: v20260702b - 热门话题跳转修复版');
         // 用户登录状态
         let isLoggedIn = false;
         let isGuest = true;  // 默认游客模式
@@ -993,7 +994,7 @@
                 const targetCat = topic.category;
                 const catLabel = topic.categoryLabel || targetCat;
                 
-                console.log('[openHotTopic] 点击话题:', topic.title, '目标板块:', targetCat);
+                console.log('[openHotTopic] v20260702b 点击话题:', topic.title, '目标板块:', targetCat, '帖子数:', (posts[targetCat] || []).length);
                 
                 // 验证板块
                 const categoryObj = categories.find(c => c.id === targetCat);
