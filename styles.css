@@ -2497,15 +2497,6 @@
             .sidebar {
                 display: none;
             }
-
-            .mobile-hot-topics {
-                display: block !important;
-            }
-        }
-
-        /* 移动端热门话题默认隐藏 */
-        .mobile-hot-topics {
-            display: none;
         }
 
         @media (max-width: 768px) {
