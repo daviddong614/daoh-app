@@ -1,5 +1,5 @@
 
-        console.log('[道合] 版本: v20260702b - 热门话题跳转修复版');
+        console.log('[道合] 版本: v20260704a - 去掉热门话题模块');
         // 用户登录状态
         let isLoggedIn = false;
         let isGuest = true;  // 默认游客模式
@@ -333,6 +333,7 @@
                             comments: post.comments_count || 0,
                             time: formatTimeAgo(post.created_at),
                             tag: post.tag || '',
+                            category: cat,  // 记录所属板块
                             _dbId: post.id  // 保留数据库ID用于后续操作
                         });
                     });
@@ -584,13 +585,7 @@
             { id: 'fitness', name: '运动健身', icon: '🏃', desc: '人过中年，得有副铁骨', posts: 11800 }
         ];
 
-        const hotTopics = [
-            { title: '各位老哥，你们钓过最大的鱼是多少斤？', views: '23.5万', comments: 1842, category: 'fishing', categoryLabel: '钓鱼' },
-            { title: '推荐一款适合中年人的口粮茶', views: '18.2万', comments: 956, category: 'tea', categoryLabel: '品茶' },
-            { title: '刚提了辆坦克500，来说说用车感受', views: '15.8万', comments: 2103, category: 'car', categoryLabel: '汽车自驾' },
-            { title: '每天晨跑5公里，坚持一年了', views: '12.4万', comments: 1567, category: 'fitness', categoryLabel: '运动健身' },
-            { title: '入手了一串小叶紫檀，请各位掌眼', views: '9.7万', comments: 823, category: 'collecting', categoryLabel: '文玩盘串' }
-        ];
+        // 热门话题硬编码已移除（v20260704a），改为从数据库加载最新帖子
 
         const treeholePosts = [
             { id: 1, author: '夜行人#3782', tag: 'midlife', content: '今年45了，上有老下有小。白天在外拼事业，晚上回家还得辅导孩子作业。有时候真想找个没人的地方躲一躲，但回头看看家人，又觉得自己必须撑下去。男人嘛，就是这么累。', time: '2小时前', warms: 328, hugs: 45, comments: 89 },
@@ -914,11 +909,16 @@
             `).join('');
         }
 
-        function renderHotPosts() {
-            const container = document.getElementById('hot-posts');
-            const allPosts = Object.values(posts).flat().sort((a, b) => b.likes - a.likes).slice(0, 5);
-            container.innerHTML = allPosts.map(post => `
-                <div class="post-card" onclick="showPost('${post.id}', '')">
+        function renderLatestPosts() {
+            const container = document.getElementById('latest-posts');
+            const allPosts = [];
+            for (const [catId, catPosts] of Object.entries(posts)) {
+                catPosts.forEach(p => allPosts.push({ ...p, category: p.category || catId }));
+            }
+            allPosts.sort((a, b) => b.id - a.id);
+            const latest = allPosts.slice(0, 10);
+            container.innerHTML = latest.map(post => `
+                <div class="post-card" onclick="showPostDetail('${post.id}', '${post.category}')">
                     <div class="post-header">
                         <div class="post-avatar">${post.avatar}</div>
                         <div class="post-meta">
@@ -956,105 +956,7 @@
             `).join('');
         }
 
-        function renderHotTopics() {
-            const topicsHtml = hotTopics.map((topic, i) => `
-                <div class="hot-topic" onclick="openHotTopic(${i})" style="cursor:pointer;">
-                    <div class="hot-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
-                    <div class="hot-content">
-                        <div class="hot-title">${topic.title}</div>
-                        <div class="hot-meta">${topic.views} 阅读 · ${topic.comments} 评论</div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // 渲染到侧边栏（桌面端）
-            const container = document.getElementById('hot-topics');
-            if (container) container.innerHTML = topicsHtml;
-            
-            // 渲染到移动端区域
-            const mobileContainer = document.getElementById('mobile-hot-topics');
-            if (mobileContainer) {
-                mobileContainer.innerHTML = `
-                    <div class="sidebar-card">
-                        <h3 class="sidebar-title">🔥 热议话题</h3>
-                        ${topicsHtml}
-                    </div>
-                `;
-            }
-        }
-
-        function openHotTopic(index) {
-            try {
-                const topic = hotTopics[index];
-                if (!topic) {
-                    showToast('话题不存在');
-                    return;
-                }
-                
-                const targetCat = topic.category;
-                const catLabel = topic.categoryLabel || targetCat;
-                
-                console.log('[openHotTopic] v20260702b 点击话题:', topic.title, '目标板块:', targetCat, '帖子数:', (posts[targetCat] || []).length);
-                
-                // 验证板块
-                const categoryObj = categories.find(c => c.id === targetCat);
-                if (!categoryObj) {
-                    showToast('板块不存在');
-                    return;
-                }
-                
-                const catPosts = posts[targetCat] || [];
-                
-                // 直接构建板块详情页，不依赖 showCategory
-                const category = categoryObj;
-                document.getElementById('category-detail').innerHTML = `
-                    <div class="back-btn" onclick="showPage('home')">
-                        <span>←</span> 返回首页
-                    </div>
-                    <div class="category-header">
-                        <div class="category-header-icon">${category.icon}</div>
-                        <div class="category-header-info">
-                            <h1>${category.name}</h1>
-                            <p>${category.desc}</p>
-                        </div>
-                        <div class="category-header-stats">
-                            <div class="category-stat">
-                                <div class="category-stat-value">${category.posts.toLocaleString()}</div>
-                                <div class="category-stat-label">帖子</div>
-                            </div>
-                            <div class="category-stat">
-                                <div class="category-stat-value">${Math.floor(category.posts * 0.8).toLocaleString()}</div>
-                                <div class="category-stat-label">互动</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="post-list">
-                        ${catPosts.length ? catPosts.map(post => `
-                            <div class="post-card" onclick="showPostDetail('${post.id}', '${targetCat}')">
-                                <div class="post-header">
-                                    <div class="post-avatar">${post.avatar}</div>
-                                    <div class="post-meta">
-                                        <div class="post-author">${post.author}</div>
-                                        <div class="post-time">${post.time}</div>
-                                    </div>
-                                    <span class="post-tag">${post.tag}</span>
-                                </div>
-                                <h3 class="post-title">${post.title}</h3>
-                                <p class="post-excerpt">${post.content}</p>
-                            </div>
-                        `).join('') : '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">这里还安静，你来写第一笔</div></div>'}
-                    </div>
-                `;
-                
-                showPage('category');
-                showToast(`进入「${catLabel}」板块`);
-                console.log('[openHotTopic] 已跳转到', targetCat, '帖子数:', catPosts.length);
-                
-            } catch(e) {
-                console.error('[openHotTopic] 异常:', e);
-                showToast('出错了：' + e.message);
-            }
-        }
+        // 热门话题模块已移除（v20260704a），改为"最新动态"展示最新帖子
 
         function renderActiveUsers() {
             const container = document.getElementById('active-users');
@@ -1710,7 +1612,7 @@
 
                 // 刷新帖子列表
                 await loadPostsFromDB();
-                renderHotPosts();
+                renderLatestPosts();
             } catch (e) {
                 console.error('发帖异常:', e);
                 showToast('发帖失败，请重试');
@@ -1962,8 +1864,7 @@
             // 每个模块独立 try-catch，一个崩不影响其他的
             try { renderInterestCircles(); } catch(e) { console.error('[renderInterestCircles] error:', e); }
             try { renderCategories(); } catch(e) { console.error('[renderCategories] error:', e); }
-            try { renderHotPosts(); } catch(e) { console.error('[renderHotPosts] error:', e); }
-            try { renderHotTopics(); } catch(e) { console.error('[renderHotTopics] error:', e); }
+            try { renderLatestPosts(); } catch(e) { console.error('[renderLatestPosts] error:', e); }
             try { renderActiveUsers(); } catch(e) { console.error('[renderActiveUsers] error:', e); }
             try { renderTreeholePreview_placeholder(); } catch(e) { console.error('[renderTreeholePreview] error:', e); }
             try { renderTreeholeFull(); } catch(e) { console.error('[renderTreeholeFull] error:', e); }
@@ -1978,7 +1879,7 @@
             // 异步初始化：从 Supabase 恢复登录状态和数据
             initApp().then(() => {
                 // 数据加载完成后重新渲染
-                try { renderHotPosts(); } catch(e) { console.error('[re-renderHotPosts] error:', e); }
+                try { renderLatestPosts(); } catch(e) { console.error('[re-renderLatestPosts] error:', e); }
                 try { renderTreeholeFull(); } catch(e) { console.error('[re-renderTreeholeFull] error:', e); }
             }).catch(e => {
                 console.error('[initApp] 初始化失败:', e);
