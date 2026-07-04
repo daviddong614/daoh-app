@@ -8,20 +8,20 @@
     <meta http-equiv="Expires" content="0">
     <script>
         // 强制清除缓存版本
-        if (location.search !== '?v=20260702b') {
-            location.replace(location.pathname + '?v=20260702b');
+        if (location.search !== '?v=20260704a') {
+            location.replace(location.pathname + '?v=20260704a');
         }
     </script>
     <title>道合 - 志同道合者的精神角落</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260702b">
+    <link rel="stylesheet" href="styles.css?v=20260704a">
 
 
 <script>
 // 强制清除缓存
-if (!sessionStorage.getItem('cache_cleared_20260702b')) {
-    sessionStorage.setItem('cache_cleared_20260702b', '1');
+if (!sessionStorage.getItem('cache_cleared_20260704a')) {
+    sessionStorage.setItem('cache_cleared_20260704a', '1');
     window.location.reload(true);
 }
 </script>
@@ -381,23 +381,17 @@ if (!sessionStorage.getItem('cache_cleared_20260702b')) {
                 <!-- 由 renderInterestCircles() 动态渲染 -->
             </div>
 
-            <!-- 热门内容 -->
-            <h2 class="section-title">热门话题</h2>
+            <!-- 最新帖子 -->
+            <h2 class="section-title">最新动态</h2>
             <div class="content-layout">
-                <div class="post-list" id="hot-posts"></div>
+                <div class="post-list" id="latest-posts"></div>
                 <aside class="sidebar">
-                    <div class="sidebar-card">
-                        <h3 class="sidebar-title">🔥 热议话题</h3>
-                        <div id="hot-topics"></div>
-                    </div>
                     <div class="sidebar-card">
                         <h3 class="sidebar-title">📅 本周活跃</h3>
                         <div id="active-users"></div>
                     </div>
                 </aside>
             </div>
-            <!-- 移动端热门话题（桌面端隐藏） -->
-            <div class="mobile-hot-topics" id="mobile-hot-topics" style="margin-top: 20px;"></div>
         </div>
 
         <!-- 板块详情页 -->
@@ -973,7 +967,7 @@ if (!sessionStorage.getItem('cache_cleared_20260702b')) {
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
-    <script defer src="app.js?v=20260702b"></script>
+    <script defer src="app.js?v=20260704a"></script>
 
 
     <!-- Lightbox 全屏查看 -->
