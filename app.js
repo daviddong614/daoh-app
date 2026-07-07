@@ -1,5 +1,5 @@
 
-        console.log('[道合] 版本: v20260704a - 去掉热门话题模块');
+        console.log('[道合] 版本: v20260707a - 修复浏览器返回键问题');
         // 用户登录状态
         let isLoggedIn = false;
         let isGuest = true;  // 默认游客模式
@@ -193,6 +193,7 @@
                         document.getElementById('login-page').style.display = 'none';
                         updateLoggedInUI();
                         updateGuestUI();
+                        history.replaceState({page: 'home'}, '', '');
                         showToast(`欢迎回来，${userName}！`);
                     } else {
                         showToast('密码错误，请重试');
@@ -213,6 +214,7 @@
                     document.getElementById('login-page').style.display = 'none';
                     updateLoggedInUI();
                     updateGuestUI();
+                    history.replaceState({page: 'home'}, '', '');
                     showToast(`注册成功，欢迎，${userName}！`);
                     
                     // 首次注册后弹出完善信息弹窗
@@ -266,6 +268,8 @@
                 document.getElementById('login-page').style.display = 'none';
                 updateLoggedInUI();
                 updateGuestUI();
+                // 替换浏览器历史，防止返回键回到登录页
+                history.replaceState({page: 'home'}, '', '');
                 console.log('已恢复会话:', userName);
             } else {
                 // 没有会话，保持游客模式（登录页默认显示）
@@ -585,7 +589,7 @@
             { id: 'fitness', name: '运动健身', icon: '🏃', desc: '人过中年，得有副铁骨', posts: 11800 }
         ];
 
-        // 热门话题硬编码已移除（v20260704a），改为从数据库加载最新帖子
+        // 热门话题硬编码已移除（v20260707a），改为从数据库加载最新帖子
 
         const treeholePosts = [
             { id: 1, author: '夜行人#3782', tag: 'midlife', content: '今年45了，上有老下有小。白天在外拼事业，晚上回家还得辅导孩子作业。有时候真想找个没人的地方躲一躲，但回头看看家人，又觉得自己必须撑下去。男人嘛，就是这么累。', time: '2小时前', warms: 328, hugs: 45, comments: 89 },
@@ -675,12 +679,15 @@
                 const loginPage = document.getElementById('login-page');
                 if (loginPage) loginPage.style.display = 'none';
                 updateGuestUI();
+                // 替换浏览器历史，防止返回键回到登录页
+                history.replaceState({page: 'home'}, '', '');
                 showToast('您已进入游客模式，可浏览但无法互动');
             } catch(e) {
                 console.error('[enterAsGuest] 错误:', e);
                 // 即使出错也强制隐藏登录页
                 const lp = document.getElementById('login-page');
                 if (lp) lp.style.display = 'none';
+                history.replaceState({page: 'home'}, '', '');
             }
         }
 
@@ -879,10 +886,18 @@
         }
 
         // 页面渲染
+        // 浏览器返回键标记：popstate触发时为true，避免重复pushState
+        let _navigatingBack = false;
+
         function showPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(`page-${page}`).classList.add('active');
             window.scrollTo(0, 0);
+            
+            // 记录到浏览器历史（popstate触发时不重复push）
+            if (!_navigatingBack) {
+                history.pushState({page: page}, '', '');
+            }
             
             // 如果切换到树洞页面，确保标题是最新的
             if (page === 'treehole') {
@@ -956,7 +971,7 @@
             `).join('');
         }
 
-        // 热门话题模块已移除（v20260704a），改为"最新动态"展示最新帖子
+        // 热门话题模块已移除（v20260707a），改为"最新动态"展示最新帖子
 
         function renderActiveUsers() {
             const container = document.getElementById('active-users');
@@ -1876,6 +1891,16 @@
             try { initHomeModules(); } catch(e) { console.error('[initHomeModules] error:', e); }
             try { initTopicCharCount(); } catch(e) { console.error('[initTopicCharCount] error:', e); }
             
+            // 浏览器返回键处理：popstate触发时恢复到上一个页面
+            window.addEventListener('popstate', (event) => {
+                const page = event.state?.page;
+                if (page) {
+                    _navigatingBack = true;
+                    showPage(page);
+                    _navigatingBack = false;
+                }
+            });
+
             // 异步初始化：从 Supabase 恢复登录状态和数据
             initApp().then(() => {
                 // 数据加载完成后重新渲染
