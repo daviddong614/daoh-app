@@ -1,5 +1,5 @@
 
-        console.log('[道合] 版本: v20260708a - 修复浏览器返回键问题');
+        console.log('[道合] 版本: v20260708b - 修复浏览器返回键问题');
         // 用户登录状态
         let isLoggedIn = false;
         let isGuest = true;  // 默认游客模式
@@ -590,7 +590,7 @@
             { id: 'fitness', name: '运动健身', icon: '🏃', desc: '人过中年，得有副铁骨', posts: 11800 }
         ];
 
-        // 热门话题硬编码已移除（v20260708a），改为从数据库加载最新帖子
+        // 热门话题硬编码已移除（v20260708b），改为从数据库加载最新帖子
 
         const treeholePosts = [
             { id: 1, author: '夜行人#3782', tag: 'midlife', content: '今年45了，上有老下有小。白天在外拼事业，晚上回家还得辅导孩子作业。有时候真想找个没人的地方躲一躲，但回头看看家人，又觉得自己必须撑下去。男人嘛，就是这么累。', time: '2小时前', warms: 328, hugs: 45, comments: 89 },
@@ -972,7 +972,7 @@
             `).join('');
         }
 
-        // 热门话题模块已移除（v20260708a），改为"最新动态"展示最新帖子
+        // 热门话题模块已移除（v20260708b），改为"最新动态"展示最新帖子
 
         function renderActiveUsers() {
             const container = document.getElementById('active-users');
@@ -1369,7 +1369,7 @@
                         ${post.unverified ? '<div class="audit-warning">⚠️ 该内容未经证实，请理性看待</div>' : ''}
                         ${post.disclaimer ? '<div class="disclaimer-badge">⚠️ 以上内容仅为个人观点，不构成专业建议</div>' : ''}
                         <div class="detail-actions">
-                            <div class="detail-action" onclick="toggleLike(this, '${post.id}')"><span>👍</span> <span>${post.likes}</span></div>
+                            <div class="detail-action" onclick="toggleLike(this, '${post.id}')"><span>👍</span> <span class="like-count">${post.likes}</span></div>
                             <div class="detail-action"><span>💬</span> <span>${post.comments}</span></div>
                             <div class="detail-action"><span>📤</span> 分享</div>
                             <div class="detail-action"><span>⭐</span> 记下了</div>
@@ -1759,12 +1759,16 @@
                 return;
             }
 
+            // 找到计数元素（兼容首页.like-count和详情页span:last-child）
+            const countEl = el.querySelector('.like-count') || el.querySelector('span:last-child');
+            if (!countEl) { console.error('[toggleLike] 找不到计数元素'); return; }
+
             // Supabase 不可用时，用 localStorage 兜底
             if (!sb) {
                 const likeKey = 'daoh_likes_' + userName;
                 const likes = JSON.parse(localStorage.getItem(likeKey) || '{}');
                 const isLiked = el.classList.contains('liked');
-                const count = el.querySelector('span:last-child');
+                const count = countEl;
                 const current = parseInt(count.textContent) || 0;
                 if (isLiked) {
                     delete likes[postId];
@@ -1781,8 +1785,8 @@
 
             try {
                 const isLiked = el.classList.contains('liked');
-                const count = el.querySelector('span:last-child');
-                const current = parseInt(count.textContent);
+                const count = countEl;
+                const current = parseInt(count.textContent) || 0;
 
                 if (isLiked) {
                     // 取消点赞
