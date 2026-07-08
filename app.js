@@ -1,5 +1,5 @@
 
-        console.log('[道合] 版本: v20260707a - 修复浏览器返回键问题');
+        console.log('[道合] 版本: v20260708a - 修复浏览器返回键问题');
         // 用户登录状态
         let isLoggedIn = false;
         let isGuest = true;  // 默认游客模式
@@ -176,17 +176,18 @@
             }
             
             try {
-                const exists = await checkNicknameExists(nickname);
+                // 一次查询：同时检查用户是否存在+验证密码，减少网络往返
+                const { data: existingUser, error: queryError } = await sb.from('users')
+                    .select('*').eq('nickname', nickname).single();
                 
-                if (exists) {
-                    // 用户已存在，验证密码
-                    const valid = await verifyUser(nickname, password);
-                    if (valid) {
-                        // 登录成功
-                        const userData = await getCurrentUserData();
+                if (existingUser) {
+                    // 用户已存在，检查密码
+                    if (existingUser.password_hash === password) {
+                        // 登录成功，直接用查询结果
+                        localStorage.setItem(CURRENT_USER_KEY, nickname);
                         userName = nickname;
-                        userAvatar = userData?.avatar || '👨';
-                        selectedHobbies = userData?.hobbies || [];
+                        userAvatar = existingUser.avatar || '👨';
+                        selectedHobbies = existingUser.hobbies || [];
                         isLoggedIn = true;
                         isGuest = false;
                         
@@ -589,7 +590,7 @@
             { id: 'fitness', name: '运动健身', icon: '🏃', desc: '人过中年，得有副铁骨', posts: 11800 }
         ];
 
-        // 热门话题硬编码已移除（v20260707a），改为从数据库加载最新帖子
+        // 热门话题硬编码已移除（v20260708a），改为从数据库加载最新帖子
 
         const treeholePosts = [
             { id: 1, author: '夜行人#3782', tag: 'midlife', content: '今年45了，上有老下有小。白天在外拼事业，晚上回家还得辅导孩子作业。有时候真想找个没人的地方躲一躲，但回头看看家人，又觉得自己必须撑下去。男人嘛，就是这么累。', time: '2小时前', warms: 328, hugs: 45, comments: 89 },
@@ -963,15 +964,15 @@
                         </div>`;
                     })() : ''}
                     <div class="post-footer">
-                        <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
-                        <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments} 评论</div>
+                        <div class="post-action" onclick="event.stopPropagation(); toggleLike(this, '${post.id}')"><span class="post-action-icon">👍</span> <span class="like-count">${post.likes}</span> 有共鸣</div>
+                        <div class="post-action" onclick="event.stopPropagation(); showPostDetail('${post.id}', '${post.category}')"><span class="post-action-icon">💬</span> ${post.comments} 评论</div>
                         <div class="post-action"><span class="post-action-icon">👁️</span> ${Math.floor(post.likes * 10)}</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // 热门话题模块已移除（v20260707a），改为"最新动态"展示最新帖子
+        // 热门话题模块已移除（v20260708a），改为"最新动态"展示最新帖子
 
         function renderActiveUsers() {
             const container = document.getElementById('active-users');
@@ -1269,8 +1270,8 @@
                                 </div>`;
                             })() : ''}
                             <div class="post-footer">
-                                <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
-                                <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments} 评论</div>
+                                <div class="post-action" onclick="event.stopPropagation(); toggleLike(this, '${post.id}')"><span class="post-action-icon">👍</span> <span class="like-count">${post.likes}</span> 有共鸣</div>
+                                <div class="post-action" onclick="event.stopPropagation(); showPostDetail('${post.id}', '${catId}')"><span class="post-action-icon">💬</span> ${post.comments} 评论</div>
                             </div>
                         </div>
                     `).join('') : '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">这里还安静，你来写第一笔</div></div>'}
