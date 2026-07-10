@@ -1,5 +1,5 @@
 
-        console.log('[道合] 版本: v20260710a - 修复手机端缓存导致打不开问题');
+        console.log('[道合] 版本: v20260711a - 修复板块点赞/评论功能');
         // 用户登录状态
         let isLoggedIn = false;
         let isGuest = true;  // 默认游客模式
@@ -1880,8 +1880,26 @@
         }
 
         // 统一初始化入口
-        document.addEventListener('DOMContentLoaded', () => {
-            // 每个模块独立 try-catch，一个崩不影响其他的
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 浏览器返回键处理：popstate触发时恢复到上一个页面
+            window.addEventListener('popstate', (event) => {
+                const page = event.state?.page;
+                if (page) {
+                    _navigatingBack = true;
+                    showPage(page);
+                    _navigatingBack = false;
+                }
+            });
+
+            // 先等待异步初始化完成（从 Supabase 恢复登录状态和数据）
+            try {
+                await initApp();
+                console.log('[initApp] 初始化完成');
+            } catch(e) {
+                console.error('[initApp] 初始化失败:', e);
+            }
+
+            // 数据加载完成后再渲染所有模块（确保 posts 对象包含正确的 UUID）
             try { renderInterestCircles(); } catch(e) { console.error('[renderInterestCircles] error:', e); }
             try { renderCategories(); } catch(e) { console.error('[renderCategories] error:', e); }
             try { renderLatestPosts(); } catch(e) { console.error('[renderLatestPosts] error:', e); }
@@ -1895,25 +1913,6 @@
             // 首页模块初始化
             try { initHomeModules(); } catch(e) { console.error('[initHomeModules] error:', e); }
             try { initTopicCharCount(); } catch(e) { console.error('[initTopicCharCount] error:', e); }
-            
-            // 浏览器返回键处理：popstate触发时恢复到上一个页面
-            window.addEventListener('popstate', (event) => {
-                const page = event.state?.page;
-                if (page) {
-                    _navigatingBack = true;
-                    showPage(page);
-                    _navigatingBack = false;
-                }
-            });
-
-            // 异步初始化：从 Supabase 恢复登录状态和数据
-            initApp().then(() => {
-                // 数据加载完成后重新渲染
-                try { renderLatestPosts(); } catch(e) { console.error('[re-renderLatestPosts] error:', e); }
-                try { renderTreeholeFull(); } catch(e) { console.error('[re-renderTreeholeFull] error:', e); }
-            }).catch(e => {
-                console.error('[initApp] 初始化失败:', e);
-            });
         });
 
         // ==================== 首页模块化功能函数 ====================
