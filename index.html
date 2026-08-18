@@ -7002,7 +7002,11 @@
             showToast('说出来就好');
         }
 
+        let isSubmittingComment = false;
         async function submitComment(postId) {
+            // 防重复提交
+            if (isSubmittingComment) return;
+            
             // 检查登录状态
             if (isGuest || !isLoggedIn) {
                 showToast('请先登录后再评论');
@@ -7011,18 +7015,27 @@
             }
             
             const input = document.getElementById(`comment-input-${postId}`);
-            if (input && input.value.trim()) {
-                // 检测敏感词
-                const sensitiveWord = checkSensitiveWords(input.value);
-                if (sensitiveWord) {
-                    showToast('说点正经的');
-                    return;
-                }
+            if (!input || !input.value.trim()) return;
+            
+            // 检测敏感词
+            const sensitiveWord = checkSensitiveWords(input.value);
+            if (sensitiveWord) {
+                showToast('说点正经的');
+                return;
+            }
+            
+            isSubmittingComment = true;
+            const sendBtn = input.parentElement.querySelector('.comment-send');
+            if (sendBtn) sendBtn.disabled = true;
+            
+            try {
+                const targetPostId = currentPostDbId || postId;
+                const commentContent = input.value.trim();
                 
                 // 写入 Supabase
                 const { error } = await sb.from('comments').insert([{
-                    post_id: currentPostDbId || postId,
-                    content: input.value.trim(),
+                    post_id: targetPostId,
+                    content: commentContent,
                     author_nickname: userName,
                     author_avatar: userAvatar
                 }]);
@@ -7034,13 +7047,48 @@
                 }
 
                 // 更新帖子评论计数
-                await sb.rpc('increment_comments_count', { post_id_input: postId }).catch(() => {
-                    // 如果 RPC 不存在，用原始更新
-                    sb.from('posts').update({ comments_count: sb.raw('comments_count + 1') }).eq('id', currentPostDbId || postId);
+                await sb.rpc('increment_comments_count', { post_id_input: targetPostId }).catch(() => {
+                    sb.from('posts').update({ comments_count: sb.raw('comments_count + 1') }).eq('id', targetPostId);
                 });
 
                 showToast('说出来了');
                 input.value = '';
+                
+                // 重新加载评论列表
+                await refreshComments(targetPostId);
+            } finally {
+                isSubmittingComment = false;
+                if (sendBtn) sendBtn.disabled = false;
+            }
+        }
+
+        // 刷新评论列表
+        async function refreshComments(postId) {
+            try {
+                const comments = await loadCommentsFromDB(postId);
+                const commentList = document.querySelector('.comment-list');
+                if (!commentList) return;
+                
+                commentList.innerHTML = comments.map((c, i) => `
+                    <div class="comment-item">
+                        <div class="comment-avatar">${c.avatar || '👤'}</div>
+                        <div class="comment-content">
+                            <div class="comment-author">${c.author || '匿名兄弟'}</div>
+                            <div class="comment-text">${c.content}</div>
+                            <div class="comment-actions">
+                                <span class="comment-time">${c.time || '刚刚'}</span>
+                                <span class="comment-reply">回复</span>
+                                <span class="comment-reply">赞</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // 更新评论计数标题
+                const title = document.getElementById('comments-count-title');
+                if (title) title.textContent = `评论 (${comments.length})`;
+            } catch(e) {
+                console.warn('刷新评论失败:', e);
             }
         }
 
