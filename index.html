@@ -6604,10 +6604,10 @@
                 const { data: dbComments } = await loadCommentsFromDB(currentPostDbId || postId);
                 if (dbComments && dbComments.length > 0) {
                     comments = dbComments.map(c => ({
-                        author: c.author_nickname || '匿名兄弟',
-                        avatar: c.author_avatar || '👤',
+                        author: c.author || '匿名兄弟',
+                        avatar: c.avatar || '👤',
                         text: c.content,
-                        time: c.created_at ? new Date(c.created_at).toLocaleString('zh-CN') : '刚刚'
+                        time: c.time || '刚刚'
                     }));
                 }
             } catch(e) { console.warn('加载评论失败:', e); }
@@ -6930,7 +6930,7 @@
             showToast('说出来就好');
         }
 
-        async async function submitComment(postId) {
+        async function submitComment(postId) {
             // 检查登录状态
             if (isGuest || !isLoggedIn) {
                 showToast('请先登录后再评论');
