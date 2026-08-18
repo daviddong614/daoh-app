@@ -5563,6 +5563,16 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // SHA-256哈希函数（用于密码加密）
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
         // 用户登录状态
         let isLoggedIn = false;
         let currentPostDbId = null;
@@ -5604,9 +5614,10 @@
 
         // 注册新用户（写入 Supabase）
         async function registerUser(nickname, password) {
+            const hashedPassword = await hashPassword(password);
             const { data, error } = await sb.from('users').insert([{
                 nickname: nickname,
-                password_hash: password,
+                password_hash: hashedPassword,
                 avatar: '👨',
                 birthyear: '',
                 hobbies: [],
@@ -5623,7 +5634,8 @@
 
         // 验证用户登录（查询 Supabase）
         async function verifyUser(nickname, password) {
-            const { data, error } = await sb.from('users').select('*').eq('nickname', nickname).eq('password_hash', password).single();
+            const hashedPassword = await hashPassword(password);
+            const { data, error } = await sb.from('users').select('*').eq('nickname', nickname).eq('password_hash', hashedPassword).single();
             if (data) {
                 localStorage.setItem(CURRENT_USER_KEY, nickname);
                 return true;
