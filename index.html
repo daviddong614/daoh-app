@@ -6413,8 +6413,10 @@
                     <h3 class="post-title">${post.title}</h3>
                     <p class="post-excerpt">${post.content}</p>
                     ${(() => {
-                        const images = post.images && post.images.length ? post.images : [{data: categoryDefaultImages[getCategoryByPostId(post.id)] || ''}];
-                        if (!images[0].data && !images[0]) return '';
+                        const defaultImgs = categoryDefaultImages[getCategoryByPostId(post.id)] || [];
+                        const randomDefaultImg = defaultImgs.length > 0 ? defaultImgs[Math.floor(Math.random() * defaultImgs.length)] : '';
+                        const images = post.images && post.images.length ? post.images : (randomDefaultImg ? [{data: randomDefaultImg}] : []);
+                        if (!images || images.length === 0) return '';
                         const displayImages = images.slice(0, 9);
                         const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
                         const imageUrls = displayImages.map(img => img.data || img);
@@ -6616,8 +6618,10 @@
                             <h3 class="post-title">${post.title}</h3>
                             <p class="post-excerpt">${post.content}</p>
                             ${(() => {
-                        const images = post.images && post.images.length ? post.images : [{data: categoryDefaultImages[getCategoryByPostId(post.id)] || ''}];
-                        if (!images[0].data && !images[0]) return '';
+                        const defaultImgs = categoryDefaultImages[getCategoryByPostId(post.id)] || [];
+                        const randomDefaultImg = defaultImgs.length > 0 ? defaultImgs[Math.floor(Math.random() * defaultImgs.length)] : '';
+                        const images = post.images && post.images.length ? post.images : (randomDefaultImg ? [{data: randomDefaultImg}] : []);
+                        if (!images || images.length === 0) return '';
                         const displayImages = images.slice(0, 9);
                         const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
                         const imageUrls = displayImages.map(img => img.data || img);
