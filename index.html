@@ -6059,11 +6059,11 @@
         ];
 
         const hotTopics = [
-            { title: '各位老哥，你们钓过最大的鱼是多少斤？', views: '23.5万', comments: 1842 },
-            { title: '推荐一款适合中年人的口粮茶', views: '18.2万', comments: 956 },
-            { title: '刚提了辆坦克500，来说说用车感受', views: '15.8万', comments: 2103 },
-            { title: '每天晨跑5公里，坚持一年了', views: '12.4万', comments: 1567 },
-            { title: '入手了一串小叶紫檀，请各位掌眼', views: '9.7万', comments: 823 }
+            { title: '各位老哥，你们钓过最大的鱼是多少斤？', views: '23.5万', comments: 1842, category: 'fishing' },
+            { title: '推荐一款适合中年人的口粮茶', views: '18.2万', comments: 956, category: 'tea' },
+            { title: '刚提了辆坦克500，来说说用车感受', views: '15.8万', comments: 2103, category: 'car' },
+            { title: '每天晨跑5公里，坚持一年了', views: '12.4万', comments: 1567, category: 'fitness' },
+            { title: '入手了一串小叶紫檀，请各位掌眼', views: '9.7万', comments: 823, category: 'collecting' }
         ];
 
         const treeholePosts = [
@@ -6085,6 +6085,21 @@
             emotion: '💔 情感困惑',
             free: '🌿 自由倾诉'
         };
+
+        // 分类默认图片（在线URL，更兼容）
+        const categoryDefaultImages = {
+            fishing: 'https://images.unsplash.com/photo-1545579133-99bb5ab189bd?w=400&h=300&fit=crop',
+            tea: 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400&h=300&fit=crop',
+            collecting: 'https://images.unsplash.com/photo-1513360371669-4adf1a2a5284?w=400&h=300&fit=crop',
+            wine: 'https://images.unsplash.com/photo-1516594798947-e6549dcba47c?w=400&h=300&fit=crop',
+            chess: 'https://images.unsplash.com/photo-1528819622765-d63f13ef4b5a?w=400&h=300&fit=crop',
+            health: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
+            photo: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400&h=300&fit=crop',
+            car: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=300&fit=crop',
+            history: 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=400&h=300&fit=crop',
+            fitness: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop'
+        };
+
 
         const posts = {
             fishing: [
@@ -6397,24 +6412,22 @@
                     </div>
                     <h3 class="post-title">${post.title}</h3>
                     <p class="post-excerpt">${post.content}</p>
-                    ${post.images && post.images.length ? (() => {
-                        const displayImages = post.images.slice(0, 9);
-                        const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : displayImages.length <= 9 ? 3 : 2;
+                    ${(() => {
+                        const images = post.images && post.images.length ? post.images : [{data: categoryDefaultImages[getCategoryByPostId(post.id)] || ''}];
+                        if (!images[0].data && !images[0]) return '';
+                        const displayImages = images.slice(0, 9);
+                        const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
                         const imageUrls = displayImages.map(img => img.data || img);
                         return `<div class="post-images-grid cols-${cols}">
                             ${displayImages.map((img, idx) => {
                                 const imgSrc = img.data || img;
-                                const isVideo = img.type === 'video';
-                                return isVideo 
-                                    ? `<div class="post-video-item" onclick="event.stopPropagation(); openLightbox(['${imgSrc}'], ${idx})">
-                                        <img src="${imgSrc}" alt="视频">
-                                       </div>`
-                                    : `<div class="post-image-item" onclick="event.stopPropagation(); openLightbox(${JSON.stringify(imageUrls)}, ${idx})">
-                                        <img src="${imgSrc}" alt="图片">
-                                       </div>`;
+                                if (!imgSrc) return '';
+                                return `<div class="post-image-item" onclick="event.stopPropagation(); openLightbox(${JSON.stringify(imageUrls)}, ${idx})">
+                                    <img src="${imgSrc}" alt="图片">
+                                   </div>`;
                             }).join('')}
                         </div>`;
-                    })() : ''}
+                    })()}
                     <div class="post-footer">
                         <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
                         <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments}</div>
@@ -6427,7 +6440,7 @@
         function renderHotTopics() {
             const container = document.getElementById('hot-topics');
             container.innerHTML = hotTopics.map((topic, i) => `
-                <div class="hot-topic" onclick="showToast('话题详情开发中')">
+                <div class="hot-topic" onclick="showTopicPosts('${topic.category}', '${topic.title.replace(/'/g, "\'")}')">
                     <div class="hot-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
                     <div class="hot-content">
                         <div class="hot-title">${topic.title}</div>
@@ -6435,6 +6448,19 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+
+
+        function showTopicPosts(category, topicTitle) {
+            // 切换到分类页面显示相关帖子
+            const cat = categories.find(c => c.id === category);
+            if (cat) {
+                showCategory(cat.id);
+                showToast(`话题：${topicTitle}`);
+            } else {
+                showToast('该话题暂无相关帖子');
+            }
         }
 
         function renderActiveUsers() {
@@ -6580,24 +6606,22 @@
                             </div>
                             <h3 class="post-title">${post.title}</h3>
                             <p class="post-excerpt">${post.content}</p>
-                            ${post.images && post.images.length ? (() => {
-                                const displayImages = post.images.slice(0, 9);
-                                const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
-                                const imageUrls = displayImages.map(img => img.data || img);
-                                return `<div class="post-images-grid cols-${cols}">
-                                    ${displayImages.map((img, idx) => {
-                                        const imgSrc = img.data || img;
-                                        const isVideo = img.type === 'video';
-                                        return isVideo 
-                                            ? `<div class="post-video-item" onclick="event.stopPropagation(); openLightbox(['${imgSrc}'], ${idx})">
-                                                <img src="${imgSrc}" alt="视频">
-                                               </div>`
-                                            : `<div class="post-image-item" onclick="event.stopPropagation(); openLightbox(${JSON.stringify(imageUrls)}, ${idx})">
-                                                <img src="${imgSrc}" alt="图片">
-                                               </div>`;
-                                    }).join('')}
-                                </div>`;
-                            })() : ''}
+                            ${(() => {
+                        const images = post.images && post.images.length ? post.images : [{data: categoryDefaultImages[getCategoryByPostId(post.id)] || ''}];
+                        if (!images[0].data && !images[0]) return '';
+                        const displayImages = images.slice(0, 9);
+                        const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
+                        const imageUrls = displayImages.map(img => img.data || img);
+                        return `<div class="post-images-grid cols-${cols}">
+                            ${displayImages.map((img, idx) => {
+                                const imgSrc = img.data || img;
+                                if (!imgSrc) return '';
+                                return `<div class="post-image-item" onclick="event.stopPropagation(); openLightbox(${JSON.stringify(imageUrls)}, ${idx})">
+                                    <img src="${imgSrc}" alt="图片">
+                                   </div>`;
+                            }).join('')}
+                        </div>`;
+                    })()}
                             <div class="post-footer">
                                 <div class="post-action"><span class="post-action-icon">👍</span> ${post.likes} 有共鸣</div>
                                 <div class="post-action"><span class="post-action-icon">💬</span> ${post.comments}</div>
