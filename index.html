@@ -6453,8 +6453,14 @@
 
 
         function showTopicPosts(category, topicTitle) {
+            console.log('[DEBUG] 点击热门话题:', category, topicTitle);
+            console.log('[DEBUG] posts对象:', Object.keys(posts));
+            console.log('[DEBUG] 该分类帖子数:', posts[category] ? posts[category].length : 0);
+            
             // 切换到分类页面显示相关帖子
             const cat = categories.find(c => c.id === category);
+            console.log('[DEBUG] 找到分类:', cat ? cat.name : '未找到');
+            
             if (cat) {
                 showCategory(cat.id);
                 showToast(`话题：${topicTitle}`);
@@ -6569,6 +6575,9 @@
         }
 
         function showCategory(catId) {
+            console.log('[DEBUG] showCategory 被调用:', catId);
+            console.log('[DEBUG] 该分类帖子数:', posts[catId] ? posts[catId].length : 0);
+            
             const category = categories.find(c => c.id === catId);
             const catPosts = posts[catId] || [];
             
