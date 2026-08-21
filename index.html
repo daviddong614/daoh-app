@@ -5845,7 +5845,14 @@
                             avatar: post.author_avatar || '👨',
                             title: post.title,
                             content: post.content,
-                            images: post.images || [],
+                            images: (() => {
+                                const dbImgs = post.images;
+                                if (dbImgs && dbImgs.length > 0) return dbImgs;
+                                const cat = post.category;
+                                const defaultImgs = categoryDefaultImages[cat] || [];
+                                const randomImg = defaultImgs.length > 0 ? defaultImgs[Math.floor(Math.random() * defaultImgs.length)] : '';
+                                return randomImg ? [{data: randomImg}] : [];
+                            })(),
                             likes: post.likes_count || 0,
                             comments: post.comments_count || 0,
                             time: formatTimeAgo(post.created_at),
