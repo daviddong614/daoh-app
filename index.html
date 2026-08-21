@@ -5845,14 +5845,7 @@
                             avatar: post.author_avatar || '👨',
                             title: post.title,
                             content: post.content,
-                            images: (() => {
-                                const dbImgs = post.images;
-                                if (dbImgs && dbImgs.length > 0) return dbImgs;
-                                const cat = post.category;
-                                const defaultImgs = categoryDefaultImages[cat] || [];
-                                const randomImg = defaultImgs.length > 0 ? defaultImgs[Math.floor(Math.random() * defaultImgs.length)] : '';
-                                return randomImg ? [{data: randomImg}] : [];
-                            })(),
+                            images: post.images || [],
                             likes: post.likes_count || 0,
                             comments: post.comments_count || 0,
                             time: formatTimeAgo(post.created_at),
@@ -6420,9 +6413,7 @@
                     <h3 class="post-title">${post.title}</h3>
                     <p class="post-excerpt">${post.content}</p>
                     ${(() => {
-                        const defaultImgs = categoryDefaultImages[getCategoryByPostId(post.id)] || [];
-                        const randomDefaultImg = defaultImgs.length > 0 ? defaultImgs[Math.floor(Math.random() * defaultImgs.length)] : '';
-                        const images = post.images && post.images.length ? post.images : (randomDefaultImg ? [{data: randomDefaultImg}] : []);
+                        const images = post.images && post.images.length ? post.images : [];
                         if (!images || images.length === 0) return '';
                         const displayImages = images.slice(0, 9);
                         const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
@@ -6625,9 +6616,7 @@
                             <h3 class="post-title">${post.title}</h3>
                             <p class="post-excerpt">${post.content}</p>
                             ${(() => {
-                        const defaultImgs = categoryDefaultImages[getCategoryByPostId(post.id)] || [];
-                        const randomDefaultImg = defaultImgs.length > 0 ? defaultImgs[Math.floor(Math.random() * defaultImgs.length)] : '';
-                        const images = post.images && post.images.length ? post.images : (randomDefaultImg ? [{data: randomDefaultImg}] : []);
+                        const images = post.images && post.images.length ? post.images : [];
                         if (!images || images.length === 0) return '';
                         const displayImages = images.slice(0, 9);
                         const cols = displayImages.length === 1 ? 1 : displayImages.length <= 3 ? 2 : 3;
